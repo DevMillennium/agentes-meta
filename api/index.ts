@@ -11,8 +11,12 @@ async function getHandler(): Promise<ReturnType<typeof serverless>> {
   if (handler) return handler;
 
   try {
-    await ensureBootstrap();
     handler = serverless(createApp());
+    // Não bloquear cold start em operações de banco; bootstrap roda em segundo plano.
+    void ensureBootstrap().catch((error: unknown) => {
+      initError = error instanceof Error ? error.message : "Falha no bootstrap.";
+      console.error("[phoenix-api] bootstrap background error:", error);
+    });
     return handler;
   } catch (error) {
     initError = error instanceof Error ? error.message : "Falha ao iniciar API.";
