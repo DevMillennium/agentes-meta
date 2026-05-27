@@ -46,9 +46,15 @@ docs/
 - `GET /api/products`
 - `POST /api/campaigns/diagnose`
 - `POST /api/agents/orchestrate`
+- `GET /api/approvals`
 - `POST /api/approvals`
+- `POST /api/approvals/:id/decide`
+- `GET /webhooks/whatsapp` (verificacao Meta)
 - `POST /webhooks/whatsapp`
+- `GET /webhooks/instagram` (verificacao Meta)
 - `POST /webhooks/instagram`
+
+Rotas `/api/*` exigem header `x-api-key`.
 
 ## Como rodar local
 
@@ -88,11 +94,14 @@ Veja `.env.example`:
 
 - `DATABASE_URL`
 - `REDIS_URL`
+- `API_CORS_ORIGIN`
+- `ADMIN_API_KEY`
 - `OPENAI_API_KEY`
 - `META_APP_ID`
 - `META_APP_SECRET`
 - `META_ACCESS_TOKEN`
 - `META_API_VERSION`
+- `META_WEBHOOK_VERIFY_TOKEN`
 - `WHATSAPP_PHONE_NUMBER_ID`
 - `INSTAGRAM_BUSINESS_ACCOUNT_ID`
 - `NEXT_PUBLIC_API_URL`
