@@ -62,7 +62,9 @@ export function createApp(): express.Express {
       contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false
     })
   );
-  app.use(apiLimiter);
+  if (env.NODE_ENV !== "production") {
+    app.use(apiLimiter);
+  }
   app.use(pinoHttp());
   app.use(
     "/webhooks",
