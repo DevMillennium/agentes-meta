@@ -32,11 +32,15 @@ import { getBootstrapError } from "./bootstrap";
 
 export function createApp(): express.Express {
   const app = express();
+  app.set("trust proxy", 1);
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 300,
     standardHeaders: "draft-8",
-    legacyHeaders: false
+    legacyHeaders: false,
+    validate: {
+      ip: false
+    }
   });
 
   const corsOrigins = getCorsOrigins();
