@@ -21,6 +21,7 @@ import {
 import { enqueueInboundMessageEvent } from "./queues/inbound-messages.queue";
 import { processInboundMessageEvent } from "./modules/webhooks/services/inbound-events.service";
 import { recordWhatsAppDeliveryStatuses } from "./modules/webhooks/services/delivery-status.service";
+import { registerBrowserEmulatorRoutes } from "./dev/browser-emulator.routes";
 
 export function createApp(): express.Express {
   const app = express();
@@ -51,6 +52,8 @@ export function createApp(): express.Express {
   app.get("/health", (_req, res) => {
     res.json({ ok: true, service: "phoenix-api", timestamp: new Date().toISOString() });
   });
+
+  registerBrowserEmulatorRoutes(app);
 
   app.use("/api/auth", authRouter);
   app.use("/api/products", requireOperatorAccess, productsRouter);

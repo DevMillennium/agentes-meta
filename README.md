@@ -43,6 +43,7 @@ docs/
 ## Endpoints iniciais
 
 - `GET /health`
+- `GET /dev/emulator` (somente `NODE_ENV` diferente de `production`: painel HTML para testar a API no navegador)
 - `GET /api/products`
 - `POST /api/campaigns/diagnose`
 - `POST /api/agents/orchestrate`
@@ -93,6 +94,8 @@ npm run prisma:push
 ```bash
 npm run dev:api
 ```
+
+Em desenvolvimento, abra no navegador: `http://localhost:4000/dev/emulator` (painel para chamar `/health`, login, aprovações e orquestrador na mesma origem).
 
 7. Suba dashboard:
 
