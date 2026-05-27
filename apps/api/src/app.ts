@@ -14,6 +14,9 @@ import { env } from "./config/env";
 import { prisma } from "./common/prisma";
 import { requireOperatorAccess, verifyMetaSignature } from "./common/security";
 import { enqueueAgentOrchestrationJob } from "./queues/agent-jobs.queue";
+import { parseInboundEvents } from "./modules/webhooks/services/inbound-events.parser";
+import { enqueueInboundMessageEvent } from "./queues/inbound-messages.queue";
+import { processInboundMessageEvent } from "./modules/webhooks/services/inbound-events.service";
 
 export function createApp(): express.Express {
   const app = express();
@@ -121,9 +124,17 @@ export function createApp(): express.Express {
       res.status(400).json({ error: "Payload inválido." });
       return;
     }
+    const inboundEvents = parseInboundEvents("whatsapp", event);
+    for (const inboundEvent of inboundEvents) {
+      if (env.ENABLE_WORKERS) {
+        void enqueueInboundMessageEvent(inboundEvent);
+      } else {
+        void processInboundMessageEvent(inboundEvent);
+      }
+    }
     res.json({
       message: "Webhook WhatsApp recebido com assinatura válida.",
-      event
+      queuedEvents: inboundEvents.length
     });
   });
 
@@ -151,9 +162,17 @@ export function createApp(): express.Express {
       res.status(400).json({ error: "Payload inválido." });
       return;
     }
+    const inboundEvents = parseInboundEvents("instagram", event);
+    for (const inboundEvent of inboundEvents) {
+      if (env.ENABLE_WORKERS) {
+        void enqueueInboundMessageEvent(inboundEvent);
+      } else {
+        void processInboundMessageEvent(inboundEvent);
+      }
+    }
     res.json({
       message: "Webhook Instagram Direct recebido com assinatura válida.",
-      event
+      queuedEvents: inboundEvents.length
     });
   });
 
