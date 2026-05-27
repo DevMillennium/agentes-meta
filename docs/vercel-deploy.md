@@ -4,8 +4,10 @@ Dois projetos Vercel no mesmo repositório Git:
 
 | Projeto | Root Directory | URL típica |
 |---------|----------------|------------|
-| **phoenix-web** | `apps/web` | `https://seu-app.vercel.app` |
-| **phoenix-api** | `apps/api` | `https://seu-api.vercel.app` |
+| **phoenix-marketing-web** | `apps/web` | https://phoenix-marketing-web-millenniumomnichannel-4893s-projects.vercel.app |
+| **phoenix-marketing-api** | `.` (raiz) | https://phoenix-marketing-api-millenniumomnichannel-4893s-projects.vercel.app |
+
+Repositório Git: https://github.com/DevMillennium/agentes-meta
 
 ## 1. Banco de dados (obrigatório)
 
