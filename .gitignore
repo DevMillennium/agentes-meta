@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+build
+.env
+.env.local
+.DS_Store
+coverage
+*.log
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

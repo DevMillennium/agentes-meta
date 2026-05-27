@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum LeadTemperature {
+  COLD
+  WARM
+  HOT
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CHANGED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  approvals ApprovalRequest[]
+}
+
+model BusinessAccount {
+  id                String   @id @default(cuid())
+  name              String
+  timezone          String?
+  currency          String?
+  metaBusinessId    String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  adAccounts        MetaAdAccount[]
+  instagramAccounts InstagramAccount[]
+  whatsappNumbers   WhatsAppNumber[]
+}
+
+model MetaAdAccount {
+  id                String   @id @default(cuid())
+  businessAccountId String
+  businessAccount   BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
+  accountId         String   @unique
+  name              String
+  status            String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  campaigns         Campaign[]
+}
+
+model InstagramAccount {
+  id                String   @id @default(cuid())
+  businessAccountId String
+  businessAccount   BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
+  instagramId       String   @unique
+  username          String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WhatsAppNumber {
+  id                 String   @id @default(cuid())
+  businessAccountId  String
+  businessAccount    BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
+  phoneNumberId      String   @unique
+  displayPhoneNumber String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  name          String
+  brand         String?
+  category      String?
+  description   String?
+  price         Decimal       @db.Decimal(10, 2)
+  currency      String        @default("BRL")
+  cost          Decimal?      @db.Decimal(10, 2)
+  stockQuantity Int
+  stockLocation String?
+  minMargin     Decimal?      @db.Decimal(10, 2)
+  status        ProductStatus @default(ACTIVE)
+  imageUrls     String[]
+  videoUrls     String[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  creatives     Creative[]
+  leads         Lead[]
+}
+
+model Campaign {
+  id               String         @id @default(cuid())
+  metaAdAccountId  String
+  metaAdAccount    MetaAdAccount  @relation(fields: [metaAdAccountId], references: [id], onDelete: Cascade)
+  name             String
+  objective        String
+  status           CampaignStatus @default(DRAFT)
+  dailyBudget      Decimal?       @db.Decimal(10, 2)
+  lifetimeBudget   Decimal?       @db.Decimal(10, 2)
+  mustApproveBudgetChange Boolean @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  adSets           AdSet[]
+  snapshots        PerformanceSnapshot[]
+}
+
+model AdSet {
+  id            String         @id @default(cuid())
+  campaignId    String
+  campaign      Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name          String
+  status        CampaignStatus @default(DRAFT)
+  targetingJson Json
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  ads           Ad[]
+}
+
+model Ad {
+  id          String         @id @default(cuid())
+  adSetId     String
+  adSet       AdSet          @relation(fields: [adSetId], references: [id], onDelete: Cascade)
+  creativeId  String?
+  creative    Creative?      @relation(fields: [creativeId], references: [id], onDelete: SetNull)
+  name        String
+  status      CampaignStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Creative {
+  id             String   @id @default(cuid())
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  title          String
+  body           String
+  cta            String?
+  mediaUrl       String?
+  language       String   @default("pt-BR")
+  createdByAgent String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ads            Ad[]
+}
+
+model Lead {
+  id              String          @id @default(cuid())
+  productId       String?
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name            String?
+  phone           String?
+  instagramHandle String?
+  city            String?
+  source          String
+  status          String          @default("new")
+  temperature     LeadTemperature @default(COLD)
+  nextAction      String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  conversations   Conversation[]
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel     String
+  externalId  String?
+  startedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  messages    Message[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      String
+  content        String
+  sentAt         DateTime @default(now())
+}
+
+model PerformanceSnapshot {
+  id                 String   @id @default(cuid())
+  campaignId         String
+  campaign           Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  spend              Decimal  @db.Decimal(10, 2)
+  impressions        Int
+  reach              Int
+  frequency          Decimal  @db.Decimal(10, 2)
+  cpm                Decimal  @db.Decimal(10, 2)
+  ctr                Decimal  @db.Decimal(10, 2)
+  cpc                Decimal  @db.Decimal(10, 2)
+  linkClicks         Int
+  conversationsStarted Int
+  costPerConversation Decimal  @db.Decimal(10, 2)
+  leads              Int
+  purchases          Int
+  roas               Decimal? @db.Decimal(10, 2)
+  capturedAt         DateTime @default(now())
+}
+
+model AgentAction {
+  id         String    @id @default(cuid())
+  agentName  String
+  actionType String
+  targetType String
+  targetId   String?
+  beforeData Json?
+  afterData  Json?
+  reason     String
+  riskLevel  RiskLevel @default(LOW)
+  status     String
+  approvedBy String?
+  createdAt  DateTime  @default(now())
+}
+
+model ApprovalRequest {
+  id            String         @id @default(cuid())
+  title         String
+  description   String
+  riskLevel     RiskLevel
+  status        ApprovalStatus @default(PENDING)
+  requestedBy   String
+  requestedData Json?
+  decidedById   String?
+  decidedBy     User?          @relation(fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt     DateTime?
+  createdAt     DateTime       @default(now())
+}
+
+model ComplianceReview {
+  id             String   @id @default(cuid())
+  creativeId     String?
+  campaignId     String?
+  reviewerAgent  String
+  riskDetected   Boolean  @default(false)
+  reasons        String[]
+  recommendation String
+  createdAt      DateTime @default(now())
+}
+
+model OptimizationRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  isActive    Boolean  @default(true)
+  condition   Json
+  action      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
