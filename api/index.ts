@@ -1,15 +1,7 @@
 import serverless from "serverless-http";
 import type { Request, Response } from "express";
-
-// phoenix-dist é gerado em install (vercel.json) — require evita erro TS antes do build
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { createApp } = require("./phoenix-dist/app") as {
-  createApp: () => import("express").Express;
-};
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { ensureBootstrap } = require("./phoenix-dist/bootstrap") as {
-  ensureBootstrap: () => Promise<void>;
-};
+import { createApp } from "../apps/api/src/app";
+import { ensureBootstrap } from "../apps/api/src/bootstrap";
 
 let handler: ReturnType<typeof serverless> | null = null;
 let initError: string | null = null;
