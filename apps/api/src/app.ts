@@ -9,9 +9,11 @@ import { defaultAgents } from "./modules/agents/services/default-agents";
 import { productsRouter } from "./modules/products/products.controller";
 import { campaignsRouter } from "./modules/campaigns/campaigns.controller";
 import { approvalsRouter } from "./modules/approvals/approvals.controller";
+import { authRouter } from "./modules/auth/auth.controller";
 import { env } from "./config/env";
 import { prisma } from "./common/prisma";
-import { requireAdminApiKey, verifyMetaSignature } from "./common/security";
+import { requireOperatorAccess, verifyMetaSignature } from "./common/security";
+import { enqueueAgentOrchestrationJob } from "./queues/agent-jobs.queue";
 
 export function createApp(): express.Express {
   const app = express();
@@ -43,11 +45,12 @@ export function createApp(): express.Express {
     res.json({ ok: true, service: "phoenix-api", timestamp: new Date().toISOString() });
   });
 
-  app.use("/api/products", requireAdminApiKey, productsRouter);
-  app.use("/api/campaigns", requireAdminApiKey, campaignsRouter);
-  app.use("/api/approvals", requireAdminApiKey, approvalsRouter);
+  app.use("/api/auth", authRouter);
+  app.use("/api/products", requireOperatorAccess, productsRouter);
+  app.use("/api/campaigns", requireOperatorAccess, campaignsRouter);
+  app.use("/api/approvals", requireOperatorAccess, approvalsRouter);
 
-  app.post("/api/agents/orchestrate", requireAdminApiKey, async (req, res) => {
+  app.post("/api/agents/orchestrate", requireOperatorAccess, async (req, res) => {
     const userId = String(req.body?.userId ?? "system");
     const result = await orchestrator.runMarketingCycle({
       objective: req.body?.objective ?? "Vender produto prioritário",
@@ -82,6 +85,14 @@ export function createApp(): express.Express {
         }
       });
     }
+
+    await enqueueAgentOrchestrationJob({
+      traceId: String((result.data as { traceId?: string } | undefined)?.traceId ?? "not-provided"),
+      productId: String(req.body?.productId ?? "placeholder-product-id"),
+      objective: String(req.body?.objective ?? "Vender produto prioritário"),
+      riskLevel: result.data && "pendingApproval" in (result.data as object) ? "MEDIUM" : "LOW",
+      requestedBy: userId
+    });
 
     res.json(result);
   });
