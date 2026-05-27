@@ -36,7 +36,7 @@ export function createApp(): express.Express {
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 300,
-    standardHeaders: "draft-8",
+    standardHeaders: false,
     legacyHeaders: false,
     validate: {
       ip: false
