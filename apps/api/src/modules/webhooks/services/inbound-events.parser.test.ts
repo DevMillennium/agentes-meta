@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInboundEvents } from "./inbound-events.parser";
+import { parseInboundEvents, parseWhatsAppDeliveryStatuses } from "./inbound-events.parser";
 
 describe("parseInboundEvents", () => {
   it("extrai mensagens de WhatsApp", () => {
@@ -44,5 +44,32 @@ describe("parseInboundEvents", () => {
     expect(events).toHaveLength(1);
     expect(events[0]?.senderId).toBe("ig_user_1");
     expect(events[0]?.conversationExternalId).toBe("178414000000");
+  });
+
+  it("extrai status de entrega do WhatsApp", () => {
+    const payload = {
+      entry: [
+        {
+          changes: [
+            {
+              value: {
+                statuses: [
+                  {
+                    id: "wamid.123",
+                    status: "delivered",
+                    recipient_id: "5585999999999"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    const statuses = parseWhatsAppDeliveryStatuses(payload);
+    expect(statuses).toHaveLength(1);
+    expect(statuses[0]?.wamid).toBe("wamid.123");
+    expect(statuses[0]?.status).toBe("delivered");
   });
 });

@@ -14,9 +14,13 @@ import { env } from "./config/env";
 import { prisma } from "./common/prisma";
 import { requireOperatorAccess, verifyMetaSignature } from "./common/security";
 import { enqueueAgentOrchestrationJob } from "./queues/agent-jobs.queue";
-import { parseInboundEvents } from "./modules/webhooks/services/inbound-events.parser";
+import {
+  parseInboundEvents,
+  parseWhatsAppDeliveryStatuses
+} from "./modules/webhooks/services/inbound-events.parser";
 import { enqueueInboundMessageEvent } from "./queues/inbound-messages.queue";
 import { processInboundMessageEvent } from "./modules/webhooks/services/inbound-events.service";
+import { recordWhatsAppDeliveryStatuses } from "./modules/webhooks/services/delivery-status.service";
 
 export function createApp(): express.Express {
   const app = express();
@@ -125,6 +129,7 @@ export function createApp(): express.Express {
       return;
     }
     const inboundEvents = parseInboundEvents("whatsapp", event);
+    const deliveryStatuses = parseWhatsAppDeliveryStatuses(event);
     for (const inboundEvent of inboundEvents) {
       if (env.ENABLE_WORKERS) {
         void enqueueInboundMessageEvent(inboundEvent);
@@ -132,9 +137,11 @@ export function createApp(): express.Express {
         void processInboundMessageEvent(inboundEvent);
       }
     }
+    void recordWhatsAppDeliveryStatuses(deliveryStatuses);
     res.json({
       message: "Webhook WhatsApp recebido com assinatura válida.",
-      queuedEvents: inboundEvents.length
+      queuedEvents: inboundEvents.length,
+      deliveryStatuses: deliveryStatuses.length
     });
   });
 

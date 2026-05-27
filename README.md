@@ -25,7 +25,7 @@ docs/
 ## Modulos iniciais na API
 
 - Auth (base estrutural preparada)
-- Meta Integration (`MetaApiService` com placeholders)
+- Meta Integration (`MetaApiService`: WhatsApp/Instagram reais quando token + IDs; Marketing/Insights ainda placeholders)
 - Products, Campaigns, Approvals (endpoints iniciais)
 - Agent Orchestrator (`AgentOrchestrator`)
 - Agentes:
@@ -54,7 +54,7 @@ docs/
 - `GET /webhooks/instagram` (verificacao Meta)
 - `POST /webhooks/instagram`
 
-Rotas `/api/*` exigem header `x-api-key`.
+Rotas `/api/*` exigem autenticação: `Authorization: Bearer <jwt>` (via `POST /api/auth/login`) **ou** `x-api-key` com `ADMIN_API_KEY`.
 
 ## Como rodar local
 
@@ -96,12 +96,15 @@ Veja `.env.example`:
 - `REDIS_URL`
 - `API_CORS_ORIGIN`
 - `ADMIN_API_KEY`
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `JWT_SECRET` / `JWT_EXPIRES_IN`
+- `ENABLE_WORKERS`
 - `OPENAI_API_KEY`
 - `META_APP_ID`
 - `META_APP_SECRET`
 - `META_ACCESS_TOKEN`
 - `META_API_VERSION`
 - `META_WEBHOOK_VERIFY_TOKEN`
+- `META_HTTP_TIMEOUT_MS` / `META_HTTP_RETRIES`
 - `WHATSAPP_PHONE_NUMBER_ID`
 - `INSTAGRAM_BUSINESS_ACCOUNT_ID`
 - `NEXT_PUBLIC_API_URL`

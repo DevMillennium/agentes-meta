@@ -20,7 +20,11 @@ const envSchema = z.object({
   META_API_VERSION: z.string().default("v21.0"),
   META_ACCESS_TOKEN: z.string().optional(),
   META_APP_SECRET: z.string().optional(),
-  META_WEBHOOK_VERIFY_TOKEN: z.string().min(8, "META_WEBHOOK_VERIFY_TOKEN é obrigatória.")
+  META_WEBHOOK_VERIFY_TOKEN: z.string().min(8, "META_WEBHOOK_VERIFY_TOKEN é obrigatória."),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional().default(""),
+  INSTAGRAM_BUSINESS_ACCOUNT_ID: z.string().optional().default(""),
+  META_HTTP_TIMEOUT_MS: z.coerce.number().min(1000).max(120000).default(15000),
+  META_HTTP_RETRIES: z.coerce.number().min(0).max(5).default(2)
 });
 
 export const env = envSchema.parse(process.env);

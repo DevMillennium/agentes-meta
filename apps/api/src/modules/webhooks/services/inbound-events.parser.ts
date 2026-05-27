@@ -82,3 +82,36 @@ export function parseInboundEvents(channel: InboundChannel, payload: unknown): I
   if (channel === "whatsapp") return parseWhatsAppEntries(safePayload);
   return parseInstagramEntries(safePayload);
 }
+
+export interface WhatsAppDeliveryStatus {
+  wamid: string;
+  status: string;
+  recipientId?: string;
+  errors?: unknown;
+}
+
+export function parseWhatsAppDeliveryStatuses(payload: unknown): WhatsAppDeliveryStatus[] {
+  const statuses: WhatsAppDeliveryStatus[] = [];
+  const safePayload = payload as any;
+  const entries = Array.isArray(safePayload?.entry) ? safePayload.entry : [];
+
+  for (const entry of entries) {
+    const changes = Array.isArray(entry?.changes) ? entry.changes : [];
+    for (const change of changes) {
+      const rawStatuses = Array.isArray(change?.value?.statuses) ? change.value.statuses : [];
+      for (const item of rawStatuses) {
+        const wamid = normalizeText(item?.id);
+        const status = normalizeText(item?.status);
+        if (!wamid || !status) continue;
+        statuses.push({
+          wamid,
+          status,
+          recipientId: normalizeText(item?.recipient_id) || undefined,
+          errors: item?.errors
+        });
+      }
+    }
+  }
+
+  return statuses;
+}

@@ -1,4 +1,5 @@
 import { RiskLevel } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../../common/prisma";
 import { MetaApiService } from "../../meta/services/meta-api.service";
 import type { InboundMessageEvent } from "./inbound-events.parser";
@@ -33,19 +34,23 @@ function buildAutoReply(event: InboundMessageEvent): { text: string; needsHumanH
   };
 }
 
-async function dispatchOutboundMessage(event: InboundMessageEvent, text: string): Promise<void> {
+async function dispatchOutboundMessage(
+  event: InboundMessageEvent,
+  text: string
+): Promise<{ sendOk: boolean; sendMeta?: Record<string, unknown> }> {
   if (event.channel === "whatsapp") {
-    await metaApi.sendWhatsAppMessagePlaceholder({
-      to: event.senderId,
-      text
-    });
-    return;
+    const result = await metaApi.sendWhatsAppTextMessage(event.senderId, text);
+    return {
+      sendOk: result.ok,
+      sendMeta: { ...result } as Record<string, unknown>
+    };
   }
 
-  await metaApi.sendInstagramMessagePlaceholder({
-    recipient: event.senderId,
-    text
-  });
+  const result = await metaApi.sendInstagramTextMessage(event.senderId, text);
+  return {
+    sendOk: result.ok,
+    sendMeta: { ...result } as Record<string, unknown>
+  };
 }
 
 export async function sendAutomatedReply(
@@ -54,7 +59,7 @@ export async function sendAutomatedReply(
   conversationId: string
 ): Promise<void> {
   const reply = buildAutoReply(event);
-  await dispatchOutboundMessage(event, reply.text);
+  const { sendOk, sendMeta } = await dispatchOutboundMessage(event, reply.text);
 
   await prisma.message.create({
     data: {
@@ -84,13 +89,14 @@ export async function sendAutomatedReply(
         ? "Mensagem de risco/conflito detectada; resposta segura enviada e handoff humano ativado."
         : "Resposta automática enviada com base na intenção detectada.",
       riskLevel: reply.needsHumanHandoff ? RiskLevel.MEDIUM : RiskLevel.LOW,
-      status: "SUCCESS",
+      status: sendOk ? "SUCCESS" : "FAILED",
       beforeData: {
         inboundText: event.text
       },
       afterData: {
         outboundText: reply.text,
-        needsHumanHandoff: reply.needsHumanHandoff
+        needsHumanHandoff: reply.needsHumanHandoff,
+        delivery: (sendMeta ?? null) as Prisma.InputJsonValue
       }
     }
   });
