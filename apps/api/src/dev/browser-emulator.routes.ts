@@ -1,6 +1,13 @@
 import type { Express } from "express";
 import { env } from "../config/env";
 
+const devConfigJson = JSON.stringify({
+  adminEmail: env.ADMIN_EMAIL,
+  adminPassword: env.ADMIN_PASSWORD,
+  adminApiKey: env.ADMIN_API_KEY,
+  metaAppSecret: env.META_APP_SECRET ?? "test-app-secret-local"
+});
+
 const EMULATOR_HTML = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -11,38 +18,41 @@ const EMULATOR_HTML = `<!DOCTYPE html>
     :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
     body { margin: 0 auto; max-width: 52rem; padding: 1.25rem; line-height: 1.45; }
     h1 { font-size: 1.25rem; }
-    section { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    section { border: 1px solid #8884; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
     label { display: block; margin: 0.35rem 0 0.15rem; font-weight: 600; }
     input, textarea, button { width: 100%; box-sizing: border-box; padding: 0.45rem; font: inherit; }
-    textarea { min-height: 7rem; font-family: ui-monospace, monospace; }
+    textarea { min-height: 6rem; font-family: ui-monospace, monospace; font-size: 0.85rem; }
     button { margin-top: 0.5rem; cursor: pointer; width: auto; }
-    pre { background: #1112; padding: 0.75rem; overflow: auto; border-radius: 6px; white-space: pre-wrap; }
+    pre { background: #1112; padding: 0.75rem; overflow: auto; border-radius: 6px; white-space: pre-wrap; font-size: 0.8rem; }
     .row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
     .muted { opacity: 0.75; font-size: 0.9rem; }
+    .ok { color: #0a0; font-weight: 700; }
+    .err { color: #c00; font-weight: 700; }
     a { color: inherit; }
   </style>
 </head>
 <body>
-  <h1>Emulador do backend (somente desenvolvimento)</h1>
-  <p class="muted">Mesma origem da API — sem CORS. Não habilitado em <code>NODE_ENV=production</code>.</p>
+  <h1>Emulador Phoenix API</h1>
+  <p id="status" class="muted">Iniciando…</p>
 
   <section>
     <h2>Health</h2>
-    <p><a href="/health" target="_blank" rel="noopener">Abrir <code>/health</code> em nova aba</a></p>
     <div class="row">
-      <button type="button" id="btn-health">GET /health (fetch)</button>
+      <button type="button" id="btn-health">GET /health</button>
     </div>
     <pre id="out-health">{}</pre>
   </section>
 
   <section>
-    <h2>Auth</h2>
-    <label for="email">E-mail admin</label>
-    <input id="email" type="email" autocomplete="username" />
+    <h2>Auth (credenciais do .env local)</h2>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" />
     <label for="password">Senha</label>
-    <input id="password" type="password" autocomplete="current-password" />
+    <input id="password" type="password" />
+    <label for="apikey">x-api-key</label>
+    <input id="apikey" type="text" />
     <div class="row">
-      <button type="button" id="btn-login">POST /api/auth/login</button>
+      <button type="button" id="btn-login">Login JWT</button>
       <button type="button" id="btn-clear">Limpar token</button>
     </div>
     <pre id="out-auth">{}</pre>
@@ -50,52 +60,41 @@ const EMULATOR_HTML = `<!DOCTYPE html>
 
   <section>
     <h2>API protegida</h2>
-    <p class="muted">Usa <code>Authorization: Bearer</code> do login ou cole <code>x-api-key</code>.</p>
-    <label for="apikey">x-api-key (opcional)</label>
-    <input id="apikey" type="password" autocomplete="off" placeholder="ADMIN_API_KEY" />
-    <div class="row" style="margin-top:0.5rem">
+    <div class="row">
       <button type="button" id="btn-approvals">GET /api/approvals</button>
       <button type="button" id="btn-products">GET /api/products</button>
+      <button type="button" id="btn-orchestrate">POST /api/agents/orchestrate</button>
     </div>
     <pre id="out-api">{}</pre>
   </section>
 
   <section>
-    <h2>Orquestrador</h2>
-    <label for="orch-body">JSON (POST /api/agents/orchestrate)</label>
-    <textarea id="orch-body">{
-  "objective": "Vender produto prioritário",
-  "maxDailyBudget": 50,
-  "productId": "demo-product",
-  "campaignType": "messages",
-  "userId": "browser-emulator"
-}</textarea>
-    <button type="button" id="btn-orchestrate">POST /api/agents/orchestrate</button>
-    <pre id="out-orch">{}</pre>
+    <h2>Webhooks (com assinatura HMAC no navegador)</h2>
+    <p class="muted">Simula mensagens WhatsApp / Instagram e status de entrega. Grava lead, conversa e resposta automática no Postgres.</p>
+    <div class="row">
+      <button type="button" id="btn-wa-inbound">WhatsApp: mensagem inbound</button>
+      <button type="button" id="btn-wa-status">WhatsApp: status delivered</button>
+      <button type="button" id="btn-ig-inbound">Instagram: mensagem inbound</button>
+    </div>
+    <pre id="out-webhook">{}</pre>
+    <p class="muted">Challenge: <a href="/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=${encodeURIComponent(env.META_WEBHOOK_VERIFY_TOKEN)}&hub.challenge=ok" target="_blank">WhatsApp</a> · <a href="/webhooks/instagram?hub.mode=subscribe&hub.verify_token=${encodeURIComponent(env.META_WEBHOOK_VERIFY_TOKEN)}&hub.challenge=ok" target="_blank">Instagram</a></p>
   </section>
 
-  <section>
-    <h2>Webhooks Meta</h2>
-    <p class="muted">A Meta exige <code>x-hub-signature-256</code> (HMAC-SHA256 do corpo com <code>META_APP_SECRET</code>). Use curl/Postman ou implemente assinatura no cliente só para testes locais.</p>
-    <p>Verify token configurado: <code>${escapeHtml(env.META_WEBHOOK_VERIFY_TOKEN)}</code></p>
-    <p><a href="/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=${encodeURIComponent(env.META_WEBHOOK_VERIFY_TOKEN)}&hub.challenge=demo123" target="_blank" rel="noopener">Testar challenge WhatsApp</a></p>
-    <p><a href="/webhooks/instagram?hub.mode=subscribe&hub.verify_token=${encodeURIComponent(env.META_WEBHOOK_VERIFY_TOKEN)}&hub.challenge=demo456" target="_blank" rel="noopener">Testar challenge Instagram</a></p>
-  </section>
-
-  <script src="/dev/emulator.js" defer></script>
+  <script>window.PHOENIX_DEV = ${devConfigJson};</script>
+  <script src="/dev/emulator.js"></script>
 </body>
 </html>`;
 
-function escapeHtml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 const EMULATOR_JS = `
 (function () {
+  const cfg = window.PHOENIX_DEV || {};
   const $ = (id) => document.getElementById(id);
   const out = (id, data) => { $(id).textContent = JSON.stringify(data, null, 2); };
-
   const tokenKey = "phoenix_emulator_jwt";
+
+  $("email").value = localStorage.getItem("phoenix_emulator_email") || cfg.adminEmail || "";
+  $("password").value = cfg.adminPassword || "";
+  $("apikey").value = localStorage.getItem("phoenix_emulator_apikey") || cfg.adminApiKey || "";
 
   function headersJson() {
     const headers = { "content-type": "application/json" };
@@ -106,8 +105,36 @@ const EMULATOR_JS = `
     return headers;
   }
 
-  $("email").value = localStorage.getItem("phoenix_emulator_email") || "";
-  $("apikey").value = localStorage.getItem("phoenix_emulator_apikey") || "";
+  async function hmacSha256Hex(secret, body) {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sig = await crypto.subtle.sign("HMAC", key, enc.encode(body));
+    return Array.from(new Uint8Array(sig))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  async function postWebhook(path, bodyObj) {
+    const body = JSON.stringify(bodyObj);
+    const secret = cfg.metaAppSecret || "";
+    if (!secret) throw new Error("META_APP_SECRET não configurado no .env");
+    const hex = await hmacSha256Hex(secret, body);
+    const res = await fetch(path, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-hub-signature-256": "sha256=" + hex
+      },
+      body
+    });
+    return { status: res.status, body: await res.json().catch(() => null) };
+  }
 
   $("btn-health").addEventListener("click", async () => {
     const res = await fetch("/health");
@@ -144,24 +171,99 @@ const EMULATOR_JS = `
   }
 
   $("btn-approvals").addEventListener("click", () => getJson("/api/approvals", "out-api"));
+
   $("btn-products").addEventListener("click", () => getJson("/api/products", "out-api"));
 
   $("btn-orchestrate").addEventListener("click", async () => {
-    let payload;
-    try {
-      payload = JSON.parse($("orch-body").value);
-    } catch (e) {
-      out("out-orch", { error: "JSON inválido", message: String(e) });
-      return;
-    }
     const res = await fetch("/api/agents/orchestrate", {
       method: "POST",
       headers: headersJson(),
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        objective: "Vender produto prioritário",
+        maxDailyBudget: 50,
+        productId: "demo-product",
+        campaignType: "messages",
+        userId: "browser-emulator"
+      })
     });
     const body = await res.json().catch(() => null);
-    out("out-orch", { status: res.status, body });
+    out("out-api", { status: res.status, body });
   });
+
+  const waInbound = {
+    entry: [{
+      changes: [{
+        value: {
+          metadata: { phone_number_id: "123456" },
+          contacts: [{ wa_id: "5585994482323", profile: { name: "Cliente Phoenix" } }],
+          messages: [{ from: "5585994482323", id: "wamid.browser.1", text: { body: "Qual o preço do AirPods?" } }]
+        }
+      }]
+    }]
+  };
+
+  const waStatus = {
+    entry: [{
+      changes: [{
+        value: {
+          statuses: [{ id: "wamid.browser.1", status: "delivered", recipient_id: "5585994482323" }]
+        }
+      }]
+    }]
+  };
+
+  const igInbound = {
+    entry: [{
+      id: "178414000000",
+      messaging: [{
+        sender: { id: "ig_user_phoenix" },
+        message: { mid: "mid.browser.1", text: "tem disponível?" }
+      }]
+    }]
+  };
+
+  $("btn-wa-inbound").addEventListener("click", async () => {
+    try {
+      out("out-webhook", await postWebhook("/webhooks/whatsapp", waInbound));
+    } catch (e) {
+      out("out-webhook", { error: String(e) });
+    }
+  });
+
+  $("btn-wa-status").addEventListener("click", async () => {
+    try {
+      out("out-webhook", await postWebhook("/webhooks/whatsapp", waStatus));
+    } catch (e) {
+      out("out-webhook", { error: String(e) });
+    }
+  });
+
+  $("btn-ig-inbound").addEventListener("click", async () => {
+    try {
+      out("out-webhook", await postWebhook("/webhooks/instagram", igInbound));
+    } catch (e) {
+      out("out-webhook", { error: String(e) });
+    }
+  });
+
+  (async function boot() {
+    const statusEl = $("status");
+    try {
+      const res = await fetch("/health");
+      const body = await res.json().catch(() => null);
+      if (res.ok) {
+        statusEl.textContent = "API online em " + location.origin;
+        statusEl.className = "ok";
+        out("out-health", { status: res.status, body });
+      } else {
+        statusEl.textContent = "API respondeu com erro " + res.status;
+        statusEl.className = "err";
+      }
+    } catch {
+      statusEl.textContent = "API offline — rode: npm run emulate";
+      statusEl.className = "err";
+    }
+  })();
 })();
 `;
 
@@ -170,7 +272,7 @@ export function registerBrowserEmulatorRoutes(app: Express): void {
     return;
   }
 
-  app.get("/dev/emulator", (_req, res) => {
+  app.get(["/dev/emulator", "/dev/emulator/"], (_req, res) => {
     res.type("html").send(EMULATOR_HTML);
   });
 

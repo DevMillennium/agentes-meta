@@ -1,5 +1,9 @@
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+import path from "node:path";
 import { z } from "zod";
+
+loadEnv({ path: path.resolve(__dirname, "../../../..", ".env") });
+loadEnv();
 
 const envSchema = z.object({
   NODE_ENV: z.string().default("development"),

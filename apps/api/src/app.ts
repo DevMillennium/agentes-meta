@@ -38,7 +38,11 @@ export function createApp(): express.Express {
       origin: env.API_CORS_ORIGIN
     })
   );
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false
+    })
+  );
   app.use(apiLimiter);
   app.use(pinoHttp({ logger }));
   app.use(

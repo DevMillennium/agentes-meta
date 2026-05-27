@@ -18,7 +18,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "db:up": "docker compose up -d",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down",
+    "emulate": "bash scripts/emulate.sh"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
