@@ -76,13 +76,25 @@ npm install
 npm run prisma:generate
 ```
 
-4. Suba API:
+4. Suba PostgreSQL (escolha uma opcao):
+
+- **Docker (recomendado):** `npm run db:up` (usa `docker-compose.yml` na raiz).
+- **Homebrew:** `brew install postgresql@16 && brew services start postgresql@16` e crie o banco `phoenix_marketing_ai` com usuario `postgres`/senha `postgres` (ou ajuste o `DATABASE_URL` no `.env`).
+
+5. Aplique o schema no banco:
+
+```bash
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/phoenix_marketing_ai?schema=public"
+npm run prisma:push
+```
+
+6. Suba API:
 
 ```bash
 npm run dev:api
 ```
 
-5. Suba dashboard:
+7. Suba dashboard:
 
 ```bash
 npm run dev:web
