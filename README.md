@@ -135,6 +135,21 @@ Veja `.env.example`:
 - `INSTAGRAM_BUSINESS_ACCOUNT_ID`
 - `NEXT_PUBLIC_API_URL`
 
+## Meta em producao (fluxo rapido)
+
+Para facilitar a subida do backend em producao com Meta:
+
+1. Defina no ambiente da Vercel:
+   - `API_PUBLIC_URL=https://SEU_DOMINIO_API`
+   - `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`
+   - IDs opcionais (`META_AD_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `INSTAGRAM_BUSINESS_ACCOUNT_ID`, `META_PAGE_ID`)
+2. No Console (`/console`), conecte a conta em **Meta OAuth**.
+3. Rode `POST /api/meta/sync-assets` para sincronizar IDs reais.
+4. Valide `GET /api/meta/production-readiness` (deve retornar `ok: true`).
+5. Configure no app da Meta:
+   - Redirect URI: `https://SEU_DOMINIO_API/api/meta/oauth/callback`
+   - Webhooks: `https://SEU_DOMINIO_API/webhooks/whatsapp` e `https://SEU_DOMINIO_API/webhooks/instagram`
+
 ## Observacoes de seguranca
 
 - Orcamento nao deve ser alterado sem aprovacao.

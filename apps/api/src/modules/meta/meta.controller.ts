@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   env,
+  getApiPublicUrl,
   getMetaAccessToken,
   getMetaRedirectUri,
   getWebAppUrl,
@@ -47,6 +48,61 @@ function sessionPayload(userId?: string) {
   };
 }
 
+function buildMetaProductionReadiness(userHasStoredToken: boolean) {
+  const apiPublicUrl = getApiPublicUrl();
+  const ids = getEffectiveMetaIds();
+  const hasToken = Boolean(getMetaAccessToken());
+  const oauthConfigured = isMetaOAuthConfigured();
+  const webhookTokenSet = Boolean(env.META_WEBHOOK_VERIFY_TOKEN?.trim());
+  const webhookVerifySamples = {
+    whatsapp: `${apiPublicUrl}/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=SEU_VERIFY_TOKEN&hub.challenge=ok`,
+    instagram: `${apiPublicUrl}/webhooks/instagram?hub.mode=subscribe&hub.verify_token=SEU_VERIFY_TOKEN&hub.challenge=ok`
+  };
+
+  const checks = {
+    oauthConfigured,
+    hasToken,
+    tokenSource: userHasStoredToken ? "database" : hasToken ? "env" : "none",
+    webhookVerifyTokenSet: webhookTokenSet,
+    apiPublicUrlIsHttps: apiPublicUrl.startsWith("https://"),
+    pageIdReady: Boolean(ids.pageId),
+    whatsappReady: Boolean(ids.whatsappPhoneNumberId),
+    instagramReady: Boolean(ids.instagramBusinessAccountId)
+  };
+
+  const missing: string[] = [];
+  if (!oauthConfigured) missing.push("Configurar META_APP_ID e META_APP_SECRET.");
+  if (!checks.apiPublicUrlIsHttps) missing.push("Definir API_PUBLIC_URL com https em produção.");
+  if (!webhookTokenSet) missing.push("Definir META_WEBHOOK_VERIFY_TOKEN.");
+  if (!hasToken) missing.push("Conectar token Meta via OAuth no console.");
+  if (!checks.pageIdReady) missing.push("Sincronizar ativos para obter META_PAGE_ID.");
+
+  const nextSteps = [
+    "1) No Console, executar conexão OAuth da Meta.",
+    "2) Executar POST /api/meta/sync-assets.",
+    "3) Configurar callback e webhooks no app Meta com as URLs retornadas.",
+    "4) Validar GET /api/meta/status e este readiness até ficar ok=true."
+  ];
+
+  return {
+    ok: missing.length === 0,
+    apiPublicUrl,
+    redirectUri: getMetaRedirectUri(),
+    webhookVerifySamples,
+    checks,
+    metaIds: {
+      adAccountId: ids.adAccountId ?? null,
+      pageId: ids.pageId ?? null,
+      whatsappPhoneNumberId: ids.whatsappPhoneNumberId ?? null,
+      instagramBusinessAccountId: ids.instagramBusinessAccountId ?? null,
+      assetsSyncedAt: ids.assetsSyncedAt
+    },
+    scopes: getOAuthScopes().split(","),
+    missing,
+    nextSteps
+  };
+}
+
 metaRouter.get("/session", requireAuth, async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.userId;
   const stored = userId ? await loadUserMetaToken(userId) : null;
@@ -82,6 +138,12 @@ metaRouter.get("/status", requireAuth, async (req: AuthenticatedRequest, res) =>
     assetsSyncedAt: ids.assetsSyncedAt,
     webhookVerifyTokenSet: Boolean(env.META_WEBHOOK_VERIFY_TOKEN?.trim())
   });
+});
+
+metaRouter.get("/production-readiness", requireOperatorAccess, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.userId;
+  const stored = userId ? await loadUserMetaToken(userId) : null;
+  res.json(buildMetaProductionReadiness(Boolean(stored)));
 });
 
 metaRouter.get("/oauth/scopes", (_req, res) => {

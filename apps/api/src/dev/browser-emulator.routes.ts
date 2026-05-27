@@ -78,6 +78,7 @@ function emulatorHtml(scriptSrc: string): string {
     <div class="row">
       <a id="link-meta-oauth" href="/api/meta/oauth/login" target="_blank" rel="noopener"><button type="button">Conectar Meta (OAuth)</button></a>
       <button type="button" id="btn-meta-status">GET /api/meta/status</button>
+      <button type="button" id="btn-meta-readiness">GET /api/meta/production-readiness</button>
       <button type="button" id="btn-meta-me">GET /api/meta/me</button>
       <button type="button" id="btn-meta-accounts">GET /api/meta/adaccounts</button>
       <button type="button" id="btn-meta-insights">POST /api/meta/insights</button>
@@ -191,6 +192,7 @@ const EMULATOR_JS = `
   $("btn-products").addEventListener("click", () => getJson("/api/products", "out-api"));
 
   $("btn-meta-status").addEventListener("click", () => getJson("/api/meta/status", "out-meta"));
+  $("btn-meta-readiness").addEventListener("click", () => getJson("/api/meta/production-readiness", "out-meta"));
 
   $("btn-meta-me").addEventListener("click", () => getJson("/api/meta/me", "out-meta"));
 
