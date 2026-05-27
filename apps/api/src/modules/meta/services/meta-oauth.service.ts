@@ -10,6 +10,7 @@ const OAUTH_SCOPES = [
   "ads_management",
   "ads_read",
   "business_management",
+  "pages_manage_metadata",
   "pages_show_list",
   "pages_read_engagement",
   "whatsapp_business_management",

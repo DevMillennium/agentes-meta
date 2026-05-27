@@ -50,7 +50,7 @@ export class MetaApiService {
   }
 
   private isInstagramGraphReady(): boolean {
-    return Boolean(getMetaAccessToken() && this.metaIds().instagramBusinessAccountId);
+    return Boolean(getMetaAccessToken() && (this.metaIds().pageId || this.metaIds().instagramBusinessAccountId));
   }
 
   private normalizeWhatsAppTo(phone: string): string {
@@ -238,8 +238,19 @@ export class MetaApiService {
       };
     }
 
-    const igUserId = this.metaIds().instagramBusinessAccountId!.trim();
-    const url = `${this.baseUrl}/${encodeURIComponent(igUserId)}/messages`;
+    // Para Instagram Messaging (conta profissional vinculada a página), o Send API usa PAGE_ID/messages.
+    const pageId = this.metaIds().pageId?.trim();
+    const fallbackIgId = this.metaIds().instagramBusinessAccountId?.trim();
+    const senderId = pageId || fallbackIgId;
+    if (!senderId) {
+      return {
+        ok: false,
+        mode: "graph",
+        provider: "instagram-messaging-api",
+        error: "META_PAGE_ID ausente. Rode POST /api/meta/sync-assets."
+      };
+    }
+    const url = `${this.baseUrl}/${encodeURIComponent(senderId)}/messages`;
     const body = {
       recipient: { id: recipientId },
       message: { text }
@@ -277,6 +288,45 @@ export class MetaApiService {
         provider: "instagram-messaging-api",
         error: error instanceof Error ? error.message : "Erro desconhecido ao enviar Instagram Direct."
       };
+    }
+  }
+
+  public async subscribeInstagramWebhooks(): Promise<MetaApiResult<Record<string, unknown>>> {
+    if (!this.hasAccessToken()) {
+      return {
+        ok: false,
+        mode: "placeholder",
+        provider: "instagram-messaging-webhooks",
+        note: "Token ausente."
+      };
+    }
+
+    const pageId = this.metaIds().pageId?.trim();
+    if (!pageId) {
+      return {
+        ok: false,
+        mode: "graph",
+        provider: "instagram-messaging-webhooks",
+        error: "META_PAGE_ID ausente. Rode POST /api/meta/sync-assets."
+      };
+    }
+
+    try {
+      const data = await postMetaGraphJson<Record<string, unknown>>(
+        `${this.baseUrl}/${encodeURIComponent(pageId)}/subscribed_apps`,
+        {
+          subscribed_fields:
+            "messages,messaging_postbacks,messaging_optins,messaging_referrals,messaging_seen,messaging_reactions"
+        }
+      );
+      return {
+        ok: true,
+        mode: "graph",
+        provider: "instagram-messaging-webhooks",
+        data
+      };
+    } catch (error) {
+      return this.toErrorResult<Record<string, unknown>>("instagram-messaging-webhooks", error);
     }
   }
 

@@ -53,24 +53,6 @@ leadsRouter.get("/", async (req, res) => {
   res.json({ items, total: items.length });
 });
 
-leadsRouter.get("/:id", async (req, res) => {
-  const lead = await prisma.lead.findUnique({
-    where: { id: req.params.id },
-    include: {
-      product: true,
-      conversations: {
-        orderBy: { updatedAt: "desc" },
-        include: { messages: { orderBy: { sentAt: "asc" } } }
-      }
-    }
-  });
-  if (!lead) {
-    res.status(404).json({ error: "Lead não encontrado." });
-    return;
-  }
-  res.json(lead);
-});
-
 function pipelineColumn(status: string, temperature: string): string {
   if (status === "aguardando_humano") return "humano";
   if (status === "lead_quente" || temperature === "HOT") return "quente";
@@ -114,6 +96,24 @@ leadsRouter.get("/board", async (_req, res) => {
     ],
     total: items.length
   });
+});
+
+leadsRouter.get("/:id", async (req, res) => {
+  const lead = await prisma.lead.findUnique({
+    where: { id: req.params.id },
+    include: {
+      product: true,
+      conversations: {
+        orderBy: { updatedAt: "desc" },
+        include: { messages: { orderBy: { sentAt: "asc" } } }
+      }
+    }
+  });
+  if (!lead) {
+    res.status(404).json({ error: "Lead não encontrado." });
+    return;
+  }
+  res.json(lead);
 });
 
 leadsRouter.patch("/:id", async (req, res) => {

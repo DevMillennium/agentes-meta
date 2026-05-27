@@ -256,7 +256,8 @@ metaRouter.post("/campaigns", requireOperatorAccess, async (req, res) => {
 metaRouter.post("/sync-assets", requireOperatorAccess, async (_req, res) => {
   try {
     const assets = await syncMetaAssetsFromGraph();
-    res.json({ ok: true, assets });
+    const subscription = await metaApi.subscribeInstagramWebhooks();
+    res.json({ ok: true, assets, subscription });
   } catch (error) {
     res.status(502).json({
       ok: false,

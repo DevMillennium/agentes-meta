@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
+import { createHmac } from "node:crypto";
 import { getMetaAccessToken } from "../../../config/env";
 import { logger } from "../../../common/logger";
 
@@ -54,16 +55,27 @@ async function requestMetaGraph<T>(
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
+      const appSecret = process.env.META_APP_SECRET?.trim();
+      const authParams: Record<string, string> = {};
+      if (token) {
+        authParams.access_token = token;
+        if (appSecret) {
+          const appSecretProof = createHmac("sha256", appSecret).update(token).digest("hex");
+          authParams.appsecret_proof = appSecretProof;
+        }
+      }
+
       const headers: Record<string, string> = {
         ...(config.headers as Record<string, string> | undefined)
       };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
 
       const response = await axios.request<T>({
         ...config,
         headers,
+        params: {
+          ...(config.params as Record<string, string | number | boolean | undefined> | undefined),
+          ...authParams
+        },
         timeout,
         validateStatus: () => true
       });
