@@ -29,7 +29,7 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
-  OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY é obrigatória para agentes."),
+  OPENAI_API_KEY: z.string().optional().default(""),
   META_APP_ID: z.string().optional().default(""),
   META_APP_SECRET: z.string().optional(),
   META_REDIRECT_URI: z.string().optional().default(""),
