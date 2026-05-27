@@ -150,7 +150,10 @@ export default function ConversasPage() {
             {!loading && items.length === 0 && (
               <p className="muted">
                 Nenhuma conversa ainda. Teste no{" "}
-                <a href="http://localhost:4000/dev/emulator">emulador de webhooks</a>.
+                <a href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/tools/emulator`}>
+                  emulador de webhooks
+                </a>
+                .
               </p>
             )}
             {items.map((c) => {

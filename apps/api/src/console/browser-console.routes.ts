@@ -5,7 +5,10 @@ const CONSOLE_CONFIG = JSON.stringify({
   apiBase: "",
   metaAppId: env.META_APP_ID ?? "",
   metaApiVersion: env.META_API_VERSION,
-  adminEmail: env.ADMIN_EMAIL
+  adminEmail: env.ADMIN_EMAIL,
+  adminPassword: env.NODE_ENV !== "production" ? env.ADMIN_PASSWORD : "",
+  adminApiKey: env.NODE_ENV !== "production" ? env.ADMIN_API_KEY : "",
+  isDev: env.NODE_ENV !== "production"
 });
 
 const CONSOLE_HTML = `<!DOCTYPE html>
@@ -59,37 +62,50 @@ const CONSOLE_HTML = `<!DOCTYPE html>
     <input id="login-email" type="email" />
     <label>Senha</label>
     <input id="login-password" type="password" />
+    <label>x-api-key (alternativa)</label>
+    <input id="login-apikey" type="text" placeholder="ADMIN_API_KEY do .env" />
     <div class="row">
-      <button class="btn" id="btn-login">Entrar</button>
+      <button class="btn" id="btn-login">Entrar com e-mail</button>
+      <button class="btn secondary" id="btn-login-key">Entrar com API Key</button>
+      <button class="btn secondary hidden" id="btn-fill-local">Preencher credenciais locais</button>
     </div>
-    <p class="muted" style="margin-top:1rem">Backend unificado: agentes, Meta, conversas e campanhas.</p>
+    <p class="muted" style="margin-top:1rem">Sessão compartilhada com CRM e emulador no mesmo domínio.</p>
   </div>
 
   <div id="app-shell" class="hidden">
     <div class="wrap">
       <nav>
         <button data-tab="overview" class="active">Visão geral</button>
+        <button data-tab="platform">Plataforma</button>
+        <button data-tab="users">Usuários</button>
         <button data-tab="meta">Meta / OAuth</button>
         <button data-tab="agents">Agentes</button>
         <button data-tab="actions">Auditoria</button>
         <button data-tab="products">Produtos</button>
         <button data-tab="conversations">Conversas</button>
+        <button data-tab="leads">Leads CRM</button>
         <button data-tab="raw">API Raw</button>
+        <a href="/" style="display:block;margin-top:1rem;color:#93c5fd;font-size:.85rem;text-decoration:none">← Centro de ferramentas</a>
+        <a href="/tools/emulator" style="display:block;margin-top:.35rem;color:#93c5fd;font-size:.85rem;text-decoration:none">Emulador webhooks</a>
         <button class="secondary" id="btn-logout" style="margin-top:1rem">Sair</button>
       </nav>
       <main>
         <section id="tab-overview"></section>
+        <section id="tab-platform" class="hidden"></section>
+        <section id="tab-users" class="hidden"></section>
         <section id="tab-meta" class="hidden"></section>
         <section id="tab-agents" class="hidden"></section>
         <section id="tab-actions" class="hidden"></section>
         <section id="tab-products" class="hidden"></section>
         <section id="tab-conversations" class="hidden"></section>
+        <section id="tab-leads" class="hidden"></section>
         <section id="tab-raw" class="hidden"></section>
       </main>
     </div>
   </div>
 
   <script>window.PHOENIX_CONSOLE=${CONSOLE_CONFIG};</script>
+  <script src="/shared/auth.js"></script>
   <script src="/console/app.js"></script>
 </body>
 </html>`;
@@ -107,20 +123,9 @@ export function registerBrowserConsoleRoutes(app: Express): void {
 const CONSOLE_JS = `
 (function () {
   const cfg = window.PHOENIX_CONSOLE || {};
-  const TOKEN_KEY = "phoenix_console_jwt";
+  const auth = window.PhoenixAuth;
   const $ = (id) => document.getElementById(id);
-
-  function token() { return localStorage.getItem(TOKEN_KEY); }
-  function headers() {
-    const h = { "content-type": "application/json" };
-    if (token()) h.authorization = "Bearer " + token();
-    return h;
-  }
-  async function api(path, opts) {
-    const res = await fetch((cfg.apiBase || "") + path, { ...opts, headers: { ...headers(), ...(opts && opts.headers) } });
-    const body = await res.json().catch(() => null);
-    return { status: res.status, ok: res.ok, body };
-  }
+  const api = (path, opts) => auth.api((cfg.apiBase || "") + path, opts);
 
   function showApp(show) {
     $("login-panel").classList.toggle("hidden", show);
@@ -130,16 +135,58 @@ const CONSOLE_JS = `
   async function loadSession() {
     const me = await api("/api/auth/me");
     if (!me.ok) { showApp(false); return null; }
-    $("user-label").textContent = me.body.user?.email || "Autenticado";
+    const u = me.body.user;
+    $("user-label").textContent = (u?.email || "Autenticado") + " (" + (u?.role || "?") + ")";
     showApp(true);
     return me.body;
   }
 
   function tab(name) {
     document.querySelectorAll("nav button[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-    ["overview","meta","agents","actions","products","conversations","raw"].forEach((t) => {
+    ["overview","platform","users","meta","agents","actions","products","conversations","leads","raw"].forEach((t) => {
       $("tab-" + t).classList.toggle("hidden", t !== name);
     });
+  }
+
+  function renderPlatform(session) {
+    const m = session.platform.meta;
+    $("tab-platform").innerHTML = \`
+      <h2>Plataforma Phoenix</h2>
+      <div class="card">
+        <h3>Sessão atual</h3>
+        <p><strong>\${session.user?.email}</strong> · perfil <code>\${session.user?.role}</code></p>
+        <p class="muted">userId: \${session.user?.userId}</p>
+      </div>
+      <div class="card">
+        <h3>Integração Meta (a autenticar)</h3>
+        <p>OAuth: <span class="badge \${m.oauthConfigured?"ok":"err"}">\${m.oauthConfigured?"Configurado":"Não configurado"}</span></p>
+        <p>Access token: <span class="badge \${m.hasAccessToken?"ok":"err"}">\${m.hasAccessToken?"Ativo":"Ausente"}</span></p>
+        <p class="muted">WhatsApp \${m.whatsappReady?"✓":"—"} · Instagram \${m.instagramReady?"✓":"—"} · Ads \${m.marketingReady?"✓":"—"}</p>
+        <p class="muted">Expira: \${m.tokenExpiresAt || "—"} · Ativos sync: \${m.assetsSyncedAt || "—"}</p>
+        <div class="row" style="margin-top:.75rem">
+          <a class="btn" href="/api/meta/oauth/login" target="_blank">Conectar Meta OAuth</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Operação</h3>
+        <p>\${session.platform.agents.total} agentes · \${session.platform.stats.leads} leads · \${session.platform.stats.conversations} conversas</p>
+      </div>\`;
+  }
+
+  async function renderUsers() {
+    const r = await api("/api/auth/users");
+    if (!r.ok) {
+      $("tab-users").innerHTML = '<h2>Usuários</h2><p class="muted">Requer perfil admin. Erro: ' + r.status + '</p>';
+      return;
+    }
+    let html = '<h2>Usuários autenticados na plataforma</h2><div class="card"><table style="width:100%;font-size:.85rem"><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Meta</th></tr>';
+    (r.body.items || []).forEach((u) => {
+      const meta = u.metaConnection;
+      const metaLabel = meta ? "Conectado " + (meta.assetsSyncedAt ? "(ativos OK)" : "(pendente sync)") : "Não conectado";
+      html += '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+u.role+'</td><td>'+metaLabel+'</td></tr>';
+    });
+    html += '</table></div>';
+    $("tab-users").innerHTML = html;
   }
 
   function renderOverview(session) {
@@ -241,7 +288,13 @@ const CONSOLE_JS = `
 
   async function renderConversations() {
     const r = await api("/api/conversations");
-    $("tab-conversations").innerHTML = '<h2>Conversas</h2><pre>'+JSON.stringify(r.body, null, 2)+'</pre>';
+    $("tab-conversations").innerHTML = '<h2>Conversas</h2><p class="muted"><a href="/tools/leads" target="_blank">Abrir CRM Leads</a></p><pre>'+JSON.stringify(r.body, null, 2)+'</pre>';
+  }
+
+  async function renderLeads() {
+    const stats = await api("/api/leads/stats/summary");
+    const list = await api("/api/leads?limit=50");
+    $("tab-leads").innerHTML = '<h2>Leads CRM</h2><p class="muted"><a href="/tools/leads" target="_blank">Interface completa</a></p><pre>'+JSON.stringify({ stats: stats.body, leads: list.body }, null, 2)+'</pre>';
   }
 
   function renderRaw() {
@@ -270,36 +323,68 @@ const CONSOLE_JS = `
   document.querySelectorAll("nav button[data-tab]").forEach((btn) => {
     btn.onclick = async () => {
       tab(btn.dataset.tab);
+      if (btn.dataset.tab === "platform" && window.__phoenixSession) renderPlatform(window.__phoenixSession);
+      if (btn.dataset.tab === "platform" && !window.__phoenixSession) loadSession().then((s) => s && renderPlatform(s));
+      if (btn.dataset.tab === "users") await renderUsers();
       if (btn.dataset.tab === "agents") await renderAgents();
       if (btn.dataset.tab === "actions") await renderActions();
       if (btn.dataset.tab === "products") await renderProducts();
       if (btn.dataset.tab === "conversations") await renderConversations();
+      if (btn.dataset.tab === "leads") await renderLeads();
       if (btn.dataset.tab === "meta") renderMeta();
       if (btn.dataset.tab === "raw") renderRaw();
     };
   });
 
+  async function afterLogin() {
+    const s = await loadSession();
+    if (!s) return;
+    window.__phoenixSession = s;
+    renderOverview(s);
+    renderPlatform(s);
+    renderMeta();
+    tab("overview");
+  }
+
   $("btn-login").onclick = async () => {
-    const r = await api("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email: $("login-email").value, password: $("login-password").value })
-    });
-    if (r.ok && r.body.accessToken) {
-      localStorage.setItem(TOKEN_KEY, r.body.accessToken);
-      const s = await loadSession();
-      if (s) { renderOverview(s); renderMeta(); tab("overview"); }
-    } else alert("Login falhou");
+    const r = await auth.loginWithPassword($("login-email").value, $("login-password").value);
+    if (r.ok) afterLogin();
+    else alert("Login falhou: " + (r.body?.error || r.status));
+  };
+
+  $("btn-login-key").onclick = async () => {
+    const key = $("login-apikey").value.trim();
+    if (!key) return alert("Informe a API Key");
+    const r = await auth.loginWithApiKey(key);
+    if (r.ok) afterLogin();
+    else alert("API Key inválida");
   };
 
   $("btn-logout").onclick = () => {
-    localStorage.removeItem(TOKEN_KEY);
+    auth.clearSession();
     showApp(false);
+    $("user-label").textContent = "Não autenticado";
   };
 
   $("login-email").value = cfg.adminEmail || "";
-  if (token()) {
+  $("login-apikey").value = cfg.adminApiKey || auth.getApiKey() || "";
+  if (cfg.isDev && cfg.adminPassword) {
+    $("btn-fill-local").classList.remove("hidden");
+    $("btn-fill-local").onclick = () => {
+      $("login-password").value = cfg.adminPassword;
+      if (cfg.adminApiKey) $("login-apikey").value = cfg.adminApiKey;
+    };
+  }
+
+  if (auth.getToken() || auth.getApiKey()) {
     loadSession().then((s) => {
-      if (s) { renderOverview(s); renderMeta(); tab("overview"); }
+      if (s) {
+        window.__phoenixSession = s;
+        renderOverview(s);
+        renderPlatform(s);
+        renderMeta();
+        tab("overview");
+      }
     });
   }
 })();

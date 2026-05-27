@@ -8,6 +8,7 @@ import { platformRouter } from "./modules/platform/platform.controller";
 import { productsRouter } from "./modules/products/products.controller";
 import { campaignsRouter } from "./modules/campaigns/campaigns.controller";
 import { conversationsRouter } from "./modules/conversations/conversations.controller";
+import { leadsRouter } from "./modules/leads/leads.controller";
 import { approvalsRouter } from "./modules/approvals/approvals.controller";
 import { authRouter } from "./modules/auth/auth.controller";
 import { env, getCorsOrigins } from "./config/env";
@@ -22,6 +23,10 @@ import { processInboundMessageEvent } from "./modules/webhooks/services/inbound-
 import { recordWhatsAppDeliveryStatuses } from "./modules/webhooks/services/delivery-status.service";
 import { registerBrowserEmulatorRoutes } from "./dev/browser-emulator.routes";
 import { registerBrowserConsoleRoutes } from "./console/browser-console.routes";
+import { registerBrowserHubRoutes } from "./hub/browser-hub.routes";
+import { registerBrowserLeadsRoutes } from "./tools/browser-leads.routes";
+import { registerBrowserAuthRoutes } from "./shared/browser-auth.routes";
+import { AGENT_CATALOG } from "./modules/agents/services/agent-catalog";
 import { metaRouter } from "./modules/meta/meta.controller";
 import { getBootstrapError } from "./bootstrap";
 
@@ -73,8 +78,15 @@ export function createApp(): express.Express {
     });
   });
 
-  registerBrowserEmulatorRoutes(app);
+  registerBrowserAuthRoutes(app);
+  registerBrowserHubRoutes(app);
   registerBrowserConsoleRoutes(app);
+  registerBrowserEmulatorRoutes(app);
+  registerBrowserLeadsRoutes(app);
+
+  app.get("/api/agents/catalog", (_req, res) => {
+    res.json({ items: AGENT_CATALOG, total: AGENT_CATALOG.length, public: true });
+  });
 
   app.use("/api/auth", authRouter);
   app.use("/api/platform", platformRouter);
@@ -82,6 +94,7 @@ export function createApp(): express.Express {
   app.use("/api/agents", requireOperatorAccess, agentsRouter);
   app.use("/api/products", requireOperatorAccess, productsRouter);
   app.use("/api/campaigns", requireOperatorAccess, campaignsRouter);
+  app.use("/api/leads", requireOperatorAccess, leadsRouter);
   app.use("/api/conversations", requireOperatorAccess, conversationsRouter);
   app.use("/api/approvals", requireOperatorAccess, approvalsRouter);
 

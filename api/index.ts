@@ -1,7 +1,7 @@
 import serverless from "serverless-http";
 import type { Request, Response } from "express";
-import { createApp } from "../apps/api/dist/app";
-import { ensureBootstrap } from "../apps/api/dist/bootstrap";
+import { createApp } from "./phoenix-dist/app";
+import { ensureBootstrap } from "./phoenix-dist/bootstrap";
 
 let handler: ReturnType<typeof serverless> | null = null;
 let initError: string | null = null;

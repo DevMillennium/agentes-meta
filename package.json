@@ -20,11 +20,13 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "emulate": "bash scripts/emulate.sh",
+    "emulate:ci": "EMULATE_NO_WAIT=1 bash scripts/emulate.sh",
     "bootstrap": "bash scripts/bootstrap-full.sh",
     "seed:products": "curl -sf -X POST http://localhost:4000/api/products/seed/default -H \"x-api-key: phoenix-local-api-key-16\"",
     "postinstall": "prisma generate",
     "vercel-build:web": "prisma generate && npm run build --workspace @phoenix/web",
-    "vercel-build:api": "prisma generate && npm run build --workspace @phoenix/api"
+    "vercel-build:api": "bash scripts/vercel-prepare-api.sh",
+    "predeploy:api": "npm run vercel-build:api"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
@@ -34,6 +36,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@prisma/client": "^6.9.0"
+    "@prisma/client": "^6.9.0",
+    "serverless-http": "^4.0.0"
   }
 }

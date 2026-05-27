@@ -2,13 +2,17 @@
 
 import { clearAuthToken } from "../lib/auth-client";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
 const MENU_ITEMS: { label: string; href: string }[] = [
   { label: "Dashboard", href: "/" },
   { label: "Produtos", href: "/produtos" },
   { label: "Campanhas", href: "/campanhas" },
   { label: "Conversas", href: "/conversas" },
   { label: "Integração Meta", href: "/configuracoes/meta" },
-  { label: "Emulador API", href: "http://localhost:4000/dev/emulator" }
+  { label: "Ferramentas API", href: `${API_URL}/` },
+  { label: "Console API", href: `${API_URL}/console` },
+  { label: "CRM Leads", href: `${API_URL}/tools/leads` }
 ];
 
 export function Sidebar() {

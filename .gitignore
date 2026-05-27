@@ -1,6 +1,7 @@
 node_modules
 .next
 dist
+api/phoenix-dist
 build
 .env
 .env.local

@@ -10,7 +10,8 @@ const devConfigJson = JSON.stringify({
   metaOAuthLoginUrl: "/api/meta/oauth/login"
 });
 
-const EMULATOR_HTML = `<!DOCTYPE html>
+function emulatorHtml(scriptSrc: string): string {
+  return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
@@ -35,7 +36,7 @@ const EMULATOR_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <h1>Emulador Phoenix API</h1>
-  <p class="muted"><a href="/console">Abrir Phoenix Console (agentes + Meta)</a></p>
+  <p class="muted"><a href="/">← Centro de ferramentas</a> · <a href="/console">Console</a> · <a href="/tools/leads">CRM Leads</a></p>
   <p id="status" class="muted">Iniciando…</p>
 
   <section>
@@ -99,28 +100,30 @@ const EMULATOR_HTML = `<!DOCTYPE html>
   </section>
 
   <script>window.PHOENIX_DEV = ${devConfigJson};</script>
-  <script src="/dev/emulator.js"></script>
+  <script src="/shared/auth.js"></script>
+  <script src="${scriptSrc}"></script>
 </body>
 </html>`;
+}
+
+const EMULATOR_HTML_DEV = emulatorHtml("/dev/emulator.js");
+const EMULATOR_HTML_TOOLS = emulatorHtml("/tools/emulator.js");
 
 const EMULATOR_JS = `
 (function () {
   const cfg = window.PHOENIX_DEV || {};
   const $ = (id) => document.getElementById(id);
   const out = (id, data) => { $(id).textContent = JSON.stringify(data, null, 2); };
-  const tokenKey = "phoenix_emulator_jwt";
+  const auth = window.PhoenixAuth;
 
   $("email").value = localStorage.getItem("phoenix_emulator_email") || cfg.adminEmail || "";
   $("password").value = cfg.adminPassword || "";
-  $("apikey").value = localStorage.getItem("phoenix_emulator_apikey") || cfg.adminApiKey || "";
+  $("apikey").value = auth.getApiKey() || cfg.adminApiKey || "";
 
   function headersJson() {
-    const headers = { "content-type": "application/json" };
-    const token = localStorage.getItem(tokenKey);
     const apiKey = $("apikey").value.trim();
-    if (token) headers["authorization"] = "Bearer " + token;
-    if (apiKey) headers["x-api-key"] = apiKey;
-    return headers;
+    if (apiKey) auth.saveSession(auth.getToken(), apiKey);
+    return auth.headers();
   }
 
   async function hmacSha256Hex(secret, body) {
@@ -163,23 +166,18 @@ const EMULATOR_JS = `
     const email = $("email").value.trim();
     const password = $("password").value;
     localStorage.setItem("phoenix_emulator_email", email);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const body = await res.json().catch(() => null);
-    if (body && body.accessToken) localStorage.setItem(tokenKey, body.accessToken);
-    out("out-auth", { status: res.status, body });
+    const r = await auth.loginWithPassword(email, password);
+    if ($("apikey").value.trim()) auth.saveSession(auth.getToken(), $("apikey").value.trim());
+    out("out-auth", { status: r.status, body: r.body, sharedSession: true });
   });
 
   $("btn-clear").addEventListener("click", () => {
-    localStorage.removeItem(tokenKey);
+    auth.clearSession();
     out("out-auth", { cleared: true });
   });
 
   $("apikey").addEventListener("change", () => {
-    localStorage.setItem("phoenix_emulator_apikey", $("apikey").value.trim());
+    auth.saveSession(auth.getToken(), $("apikey").value.trim());
   });
 
   async function getJson(path, targetId) {
@@ -302,16 +300,23 @@ const EMULATOR_JS = `
 })();
 `;
 
-export function registerBrowserEmulatorRoutes(app: Express): void {
-  if (env.NODE_ENV === "production") {
-    return;
-  }
+function mountEmulator(app: Express, basePath: "/dev/emulator" | "/tools/emulator"): void {
+  const html =
+    basePath === "/dev/emulator" ? EMULATOR_HTML_DEV : EMULATOR_HTML_TOOLS;
+  const jsPath = `${basePath}.js`;
 
-  app.get(["/dev/emulator", "/dev/emulator/"], (_req, res) => {
-    res.type("html").send(EMULATOR_HTML);
+  app.get([basePath, `${basePath}/`], (_req, res) => {
+    res.type("html").send(html);
   });
 
-  app.get("/dev/emulator.js", (_req, res) => {
+  app.get(jsPath, (_req, res) => {
     res.type("application/javascript; charset=utf-8").send(EMULATOR_JS);
   });
+}
+
+export function registerBrowserEmulatorRoutes(app: Express): void {
+  mountEmulator(app, "/tools/emulator");
+  if (env.NODE_ENV !== "production") {
+    mountEmulator(app, "/dev/emulator");
+  }
 }

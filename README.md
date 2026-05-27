@@ -42,8 +42,13 @@ docs/
 
 ## Endpoints iniciais
 
+- `GET /` — menu de ferramentas (hub)
+- `GET /console` — painel operacional no navegador
+- `GET /tools/emulator` — emulador de webhooks
+- `GET /tools/leads` — CRM de leads
 - `GET /health`
-- `GET /dev/emulator` (somente `NODE_ENV` diferente de `production`: painel HTML para testar a API no navegador)
+- `GET /api/leads` — CRM (lista, stats, detalhe, PATCH)
+- `POST /api/conversations/:id/messages` — resposta humana outbound
 - `GET /api/products`
 - `POST /api/campaigns/diagnose`
 - `POST /api/agents/orchestrate`
@@ -95,7 +100,13 @@ npm run prisma:push
 npm run dev:api
 ```
 
-Em desenvolvimento, abra no navegador: `http://localhost:4000/dev/emulator` (painel para chamar `/health`, login, aprovações e orquestrador na mesma origem).
+Centro de ferramentas (mesmo endereço da API): `http://localhost:4000/`
+
+- **Console** — `/console` (agentes, Meta, produtos, conversas)
+- **Emulador** — `/tools/emulator` (webhooks WhatsApp/Instagram)
+- **CRM Leads** — `/tools/leads`
+
+Emulação pré-deploy: `npm run emulate` (ou `EMULATE_NO_WAIT=1 npm run emulate` para só testes automatizados).
 
 7. Suba dashboard:
 
