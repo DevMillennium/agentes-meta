@@ -4,17 +4,16 @@ import helmet from "helmet";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
 import { logger } from "./common/logger";
-import { AgentOrchestrator } from "./modules/agents/services/agent.orchestrator";
-import { defaultAgents } from "./modules/agents/services/default-agents";
+import { agentsRouter } from "./modules/agents/agents.controller";
+import { platformRouter } from "./modules/platform/platform.controller";
 import { productsRouter } from "./modules/products/products.controller";
 import { campaignsRouter } from "./modules/campaigns/campaigns.controller";
 import { conversationsRouter } from "./modules/conversations/conversations.controller";
 import { approvalsRouter } from "./modules/approvals/approvals.controller";
 import { authRouter } from "./modules/auth/auth.controller";
-import { env } from "./config/env";
+import { env, getCorsOrigins } from "./config/env";
 import { prisma } from "./common/prisma";
-import { requireOperatorAccess, verifyMetaSignature } from "./common/security";
-import { enqueueAgentOrchestrationJob } from "./queues/agent-jobs.queue";
+import { requireAuth, requireOperatorAccess, verifyMetaSignature } from "./common/security";
 import {
   parseInboundEvents,
   parseWhatsAppDeliveryStatuses
@@ -23,11 +22,11 @@ import { enqueueInboundMessageEvent } from "./queues/inbound-messages.queue";
 import { processInboundMessageEvent } from "./modules/webhooks/services/inbound-events.service";
 import { recordWhatsAppDeliveryStatuses } from "./modules/webhooks/services/delivery-status.service";
 import { registerBrowserEmulatorRoutes } from "./dev/browser-emulator.routes";
+import { registerBrowserConsoleRoutes } from "./console/browser-console.routes";
 import { metaRouter } from "./modules/meta/meta.controller";
 
 export function createApp(): express.Express {
   const app = express();
-  const orchestrator = new AgentOrchestrator(defaultAgents);
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 300,
@@ -35,9 +34,18 @@ export function createApp(): express.Express {
     legacyHeaders: false
   });
 
+  const corsOrigins = getCorsOrigins();
+
   app.use(
     cors({
-      origin: env.API_CORS_ORIGIN
+      origin: (origin, callback) => {
+        if (!origin || corsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(null, false);
+      },
+      credentials: true
     })
   );
   app.use(
@@ -60,60 +68,16 @@ export function createApp(): express.Express {
   });
 
   registerBrowserEmulatorRoutes(app);
+  registerBrowserConsoleRoutes(app);
 
   app.use("/api/auth", authRouter);
+  app.use("/api/platform", platformRouter);
   app.use("/api/meta", metaRouter);
+  app.use("/api/agents", requireOperatorAccess, agentsRouter);
   app.use("/api/products", requireOperatorAccess, productsRouter);
   app.use("/api/campaigns", requireOperatorAccess, campaignsRouter);
   app.use("/api/conversations", requireOperatorAccess, conversationsRouter);
   app.use("/api/approvals", requireOperatorAccess, approvalsRouter);
-
-  app.post("/api/agents/orchestrate", requireOperatorAccess, async (req, res) => {
-    const userId = String(req.body?.userId ?? "system");
-    const result = await orchestrator.runMarketingCycle({
-      objective: req.body?.objective ?? "Vender produto prioritário",
-      maxDailyBudget: Number(req.body?.maxDailyBudget ?? 50),
-      productId: req.body?.productId ?? "placeholder-product-id",
-      campaignType: req.body?.campaignType ?? "messages"
-    }, userId);
-
-    await prisma.agentAction.create({
-      data: {
-        agentName: "AgentOrchestrator",
-        actionType: "run_marketing_cycle",
-        targetType: "campaign_flow",
-        targetId: req.body?.productId ? String(req.body.productId) : null,
-        reason: result.message,
-        riskLevel: result.data && "pendingApproval" in (result.data as object) ? "MEDIUM" : "LOW",
-        status: result.success ? "SUCCESS" : "BLOCKED",
-        beforeData: req.body ?? {},
-        afterData: result.data ? (result.data as object) : {}
-      }
-    });
-
-    const pendingApproval = (result.data as { pendingApproval?: { riskLevel: "low" | "medium" | "high"; reason: string; payload: unknown; agentName: string } } | undefined)?.pendingApproval;
-    if (pendingApproval) {
-      await prisma.approvalRequest.create({
-        data: {
-          title: `Aprovação requerida: ${pendingApproval.agentName}`,
-          description: pendingApproval.reason,
-          riskLevel: pendingApproval.riskLevel.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
-          requestedBy: userId,
-          requestedData: pendingApproval.payload as object
-        }
-      });
-    }
-
-    void enqueueAgentOrchestrationJob({
-      traceId: String((result.data as { traceId?: string } | undefined)?.traceId ?? "not-provided"),
-      productId: String(req.body?.productId ?? "placeholder-product-id"),
-      objective: String(req.body?.objective ?? "Vender produto prioritário"),
-      riskLevel: result.data && "pendingApproval" in (result.data as object) ? "MEDIUM" : "LOW",
-      requestedBy: userId
-    });
-
-    res.json(result);
-  });
 
   app.get("/webhooks/whatsapp", (req, res) => {
     const mode = req.query["hub.mode"];

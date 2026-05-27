@@ -1,5 +1,9 @@
 import { env, getMetaAccessToken } from "../../../config/env";
-import { loadMetaAssets, saveMetaAssets, type MetaAssetsConfig } from "../../../config/meta-assets.store";
+import {
+  loadUserMetaAssets,
+  saveUserMetaAssets
+} from "../../../config/meta-assets.service";
+import type { MetaAssetsConfig } from "../../../config/meta-assets.store";
 import { getMetaGraphJson } from "./meta-graph.client";
 
 interface GraphList<T> {
@@ -13,7 +17,7 @@ export async function syncMetaAssetsFromGraph(): Promise<MetaAssetsConfig> {
   }
 
   const base = `https://graph.facebook.com/${env.META_API_VERSION}`;
-  const current = loadMetaAssets();
+  const current = await loadUserMetaAssets();
   const result: MetaAssetsConfig = { ...current };
 
   const adAccounts = await getMetaGraphJson<GraphList<{ id: string; name?: string }>>(
@@ -73,6 +77,6 @@ export async function syncMetaAssetsFromGraph(): Promise<MetaAssetsConfig> {
     // WABA pode exigir permissões extras
   }
 
-  saveMetaAssets(result);
+  await saveUserMetaAssets(result);
   return result;
 }

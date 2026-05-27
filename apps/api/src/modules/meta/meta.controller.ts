@@ -1,7 +1,21 @@
 import { Router } from "express";
-import { env, getMetaAccessToken, getMetaRedirectUri, isMetaOAuthConfigured } from "../../config/env";
-import { clearStoredMetaToken, getMetaTokenFilePath, loadStoredMetaToken } from "../../config/meta-token.store";
-import { requireOperatorAccess } from "../../common/security";
+import {
+  env,
+  getMetaAccessToken,
+  getMetaRedirectUri,
+  getWebAppUrl,
+  isMetaOAuthConfigured
+} from "../../config/env";
+import {
+  clearUserMetaToken,
+  loadUserMetaToken
+} from "../../config/meta-token.service";
+import {
+  requireAuth,
+  requireOperatorAccess,
+  type AuthenticatedRequest
+} from "../../common/security";
+import { runWithUserContext } from "../../common/request-context";
 import { MetaApiService } from "./services/meta-api.service";
 import {
   buildOAuthLoginUrl,
@@ -15,13 +29,37 @@ import {
 import { MetaGraphRequestError } from "./services/meta-graph.client";
 import { syncMetaAssetsFromGraph } from "./services/meta-assets.service";
 import { getEffectiveMetaIds } from "../../config/meta-runtime";
-import { getMetaAssetsFilePath } from "../../config/meta-assets.store";
 
 export const metaRouter = Router();
 const metaApi = new MetaApiService();
 
-metaRouter.get("/status", (_req, res) => {
-  const stored = loadStoredMetaToken();
+function sessionPayload(userId?: string) {
+  const ids = getEffectiveMetaIds();
+  return {
+    oauthLoginUrl: "/api/meta/oauth/login-url",
+    sdkTokenUrl: "/api/meta/oauth/sdk-token",
+    syncAssetsUrl: "/api/meta/sync-assets",
+    hasAccessToken: Boolean(getMetaAccessToken()),
+    tokenObtainedAt: null as string | null,
+    userId: userId ?? null,
+    ...ids,
+    scopes: getOAuthScopes().split(",")
+  };
+}
+
+metaRouter.get("/session", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.userId;
+  const stored = userId ? await loadUserMetaToken(userId) : null;
+  res.json({
+    ...sessionPayload(userId),
+    hasAccessToken: Boolean(getMetaAccessToken()),
+    tokenObtainedAt: stored?.obtainedAt ?? null
+  });
+});
+
+metaRouter.get("/status", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.userId;
+  const stored = userId ? await loadUserMetaToken(userId) : null;
   const ids = getEffectiveMetaIds();
   res.json({
     appId: env.META_APP_ID || null,
@@ -30,8 +68,8 @@ metaRouter.get("/status", (_req, res) => {
     redirectUri: getMetaRedirectUri(),
     oauthConfigured: isMetaOAuthConfigured(),
     hasAccessToken: Boolean(getMetaAccessToken()),
-    tokenSource: env.metaTokenFromFile ? "file" : getMetaAccessToken() ? "env" : "none",
-    tokenFile: getMetaTokenFilePath(),
+    tokenSource: stored ? "database" : getMetaAccessToken() ? "env" : "none",
+    userId: userId ?? null,
     tokenObtainedAt: stored?.obtainedAt ?? null,
     tokenExpiresAt: stored?.expiresAt ?? null,
     whatsappReady: Boolean(getMetaAccessToken() && ids.whatsappPhoneNumberId),
@@ -41,7 +79,6 @@ metaRouter.get("/status", (_req, res) => {
     pageId: ids.pageId ?? null,
     instagramBusinessAccountId: ids.instagramBusinessAccountId ?? null,
     whatsappPhoneNumberId: ids.whatsappPhoneNumberId ?? null,
-    assetsFile: getMetaAssetsFilePath(),
     assetsSyncedAt: ids.assetsSyncedAt,
     webhookVerifyTokenSet: Boolean(env.META_WEBHOOK_VERIFY_TOKEN?.trim())
   });
@@ -51,15 +88,16 @@ metaRouter.get("/oauth/scopes", (_req, res) => {
   res.json({ scopes: getOAuthScopes().split(",") });
 });
 
-metaRouter.post("/oauth/sdk-token", async (req, res) => {
+metaRouter.post("/oauth/sdk-token", requireOperatorAccess, async (req: AuthenticatedRequest, res) => {
   const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken.trim() : "";
-  if (!accessToken) {
-    res.status(400).json({ error: "accessToken é obrigatório." });
+  const userId = req.user?.userId;
+  if (!accessToken || !userId) {
+    res.status(400).json({ error: "accessToken e usuário autenticado são obrigatórios." });
     return;
   }
 
   try {
-    const stored = await exchangeShortLivedAccessToken(accessToken);
+    const stored = await exchangeShortLivedAccessToken(accessToken, userId);
     let assets: Record<string, unknown> | undefined;
     try {
       assets = (await syncMetaAssetsFromGraph()) as Record<string, unknown>;
@@ -68,7 +106,7 @@ metaRouter.post("/oauth/sdk-token", async (req, res) => {
     }
     res.json({
       ok: true,
-      message: "Token Meta salvo no servidor.",
+      message: "Token Meta salvo para sua conta.",
       obtainedAt: stored.obtainedAt,
       expiresAt: stored.expiresAt,
       assets
@@ -84,11 +122,32 @@ metaRouter.post("/oauth/sdk-token", async (req, res) => {
   }
 });
 
-metaRouter.get("/oauth/login", (_req, res) => {
+/** URL OAuth assinada para o usuário logado (multi-tenant). */
+metaRouter.get("/oauth/login-url", requireOperatorAccess, (req: AuthenticatedRequest, res) => {
   try {
-    const state = createOAuthState();
-    const url = buildOAuthLoginUrl(state);
-    res.redirect(url);
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: "Usuário não autenticado." });
+      return;
+    }
+    const state = createOAuthState(userId);
+    res.json({ url: buildOAuthLoginUrl(state), state });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Falha ao gerar URL OAuth."
+    });
+  }
+});
+
+metaRouter.get("/oauth/login", requireOperatorAccess, (req: AuthenticatedRequest, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: "Usuário não autenticado." });
+      return;
+    }
+    const state = createOAuthState(userId);
+    res.redirect(buildOAuthLoginUrl(state));
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : "Falha ao iniciar OAuth Meta."
@@ -100,28 +159,44 @@ metaRouter.get("/oauth/callback", async (req, res) => {
   const code = typeof req.query.code === "string" ? req.query.code : undefined;
   const state = typeof req.query.state === "string" ? req.query.state : undefined;
   const oauthError = typeof req.query.error === "string" ? req.query.error : undefined;
+  const webApp = getWebAppUrl();
 
   if (oauthError) {
-    res.status(400).type("html").send(renderOAuthHtml(false, `Meta retornou erro: ${oauthError}`));
+    res
+      .status(400)
+      .type("html")
+      .send(renderOAuthHtml(false, `Meta retornou erro: ${oauthError}`, webApp));
     return;
   }
 
-  if (!code || !validateOAuthState(state)) {
-    res.status(400).type("html").send(renderOAuthHtml(false, "Código ou state OAuth inválido/expirado."));
+  const userId = validateOAuthState(state);
+  if (!code || !userId) {
+    res
+      .status(400)
+      .type("html")
+      .send(renderOAuthHtml(false, "Código ou state OAuth inválido/expirado.", webApp));
     return;
   }
 
   try {
-    const stored = await exchangeCodeForAccessToken(code);
+    const token = await exchangeCodeForAccessToken(code, userId);
     let assets: Record<string, unknown> | undefined;
     try {
-      assets = (await syncMetaAssetsFromGraph()) as Record<string, unknown>;
+      assets = await new Promise<Record<string, unknown>>((resolve, reject) => {
+        runWithUserContext(userId, { metaAccessToken: token.accessToken }, () => {
+          void syncMetaAssetsFromGraph()
+            .then((value) => resolve(value as Record<string, unknown>))
+            .catch(reject);
+        });
+      });
     } catch {
       assets = undefined;
     }
+    const stored = { token, assets };
+
     let debug: Record<string, unknown> | undefined;
     try {
-      debug = await debugToken(stored.accessToken);
+      debug = await debugToken(stored.token.accessToken);
     } catch {
       debug = undefined;
     }
@@ -132,8 +207,14 @@ metaRouter.get("/oauth/callback", async (req, res) => {
       .send(
         renderOAuthHtml(
           true,
-          "Token salvo com sucesso. Reinicie a API se o status ainda mostrar token ausente.",
-          { obtainedAt: stored.obtainedAt, expiresAt: stored.expiresAt, assets, debug }
+          "Conta Meta conectada com sucesso para o seu usuário.",
+          webApp,
+          {
+            obtainedAt: stored.token.obtainedAt,
+            expiresAt: stored.token.expiresAt,
+            assets: stored.assets,
+            debug
+          }
         )
       );
   } catch (error) {
@@ -143,13 +224,14 @@ metaRouter.get("/oauth/callback", async (req, res) => {
         : error instanceof Error
           ? error.message
           : "Falha no OAuth.";
-    res.status(500).type("html").send(renderOAuthHtml(false, message));
+    res.status(500).type("html").send(renderOAuthHtml(false, message, webApp));
   }
 });
 
-metaRouter.post("/oauth/logout", requireOperatorAccess, (_req, res) => {
-  clearStoredMetaToken();
-  res.json({ ok: true, message: "Token local removido. META_ACCESS_TOKEN no .env permanece se definido." });
+metaRouter.post("/oauth/logout", requireOperatorAccess, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.userId;
+  if (userId) await clearUserMetaToken(userId);
+  res.json({ ok: true, message: "Token Meta removido da sua conta." });
 });
 
 metaRouter.get("/me", requireOperatorAccess, async (_req, res) => {
@@ -174,7 +256,7 @@ metaRouter.post("/campaigns", requireOperatorAccess, async (req, res) => {
 metaRouter.post("/sync-assets", requireOperatorAccess, async (_req, res) => {
   try {
     const assets = await syncMetaAssetsFromGraph();
-    res.json({ ok: true, assets, file: getMetaAssetsFilePath() });
+    res.json({ ok: true, assets });
   } catch (error) {
     res.status(502).json({
       ok: false,
@@ -208,6 +290,7 @@ metaRouter.post("/insights", requireOperatorAccess, async (req, res) => {
 function renderOAuthHtml(
   success: boolean,
   message: string,
+  webAppUrl: string,
   extra?: {
     obtainedAt?: string;
     expiresAt?: string | null;
@@ -223,13 +306,13 @@ function renderOAuthHtml(
 <html lang="pt-BR">
 <head><meta charset="utf-8"/><title>${title}</title>
 <style>body{font-family:system-ui;max-width:40rem;margin:2rem auto;padding:0 1rem}
-.ok{color:#0a0}.err{color:#c00}pre{background:#1111;padding:1rem;border-radius:8px;overflow:auto;font-size:0.85rem}
+.ok{color:#0a0}.err{color:#c00}pre{background:#f2f4f7;padding:1rem;border-radius:8px;overflow:auto;font-size:0.85rem}
 a{color:#06c}</style></head>
 <body>
 <h1 class="${success ? "ok" : "err"}">${title}</h1>
 <p>${escapeHtml(message)}</p>
 ${extraBlock}
-<p><a href="/dev/emulator">Abrir emulador</a> · <a href="/api/meta/status">Ver status JSON</a></p>
+<p><a href="${escapeHtml(webAppUrl)}/configuracoes/meta">Voltar ao painel</a></p>
 </body></html>`;
 }
 

@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import { logger } from "../common/logger";
-import { getRedisConnectionOptions } from "./redis.connection";
+import { getRedisConnectionOptions, isRedisConfigured } from "./redis.connection";
 import type { InboundMessageEvent } from "../modules/webhooks/services/inbound-events.parser";
 
 export const INBOUND_MESSAGES_QUEUE = "inbound-messages";
@@ -24,6 +24,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 
 export async function enqueueInboundMessageEvent(event: InboundMessageEvent): Promise<void> {
+  if (!isRedisConfigured()) return;
   try {
     await withTimeout(
       getQueue().add("process-inbound-message", event, {

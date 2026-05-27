@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchApi } from "../lib/api";
+import { getAuthFetchOptions } from "../lib/auth-client";
 
 interface Summary {
   leads: number;
@@ -17,9 +18,7 @@ export function DashboardStats() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const apiKey =
-      process.env.NEXT_PUBLIC_ADMIN_API_KEY ?? "phoenix-local-api-key-16";
-    fetchApi<Summary>("/api/conversations/stats/summary", { apiKey })
+    fetchApi<Summary>("/api/conversations/stats/summary", getAuthFetchOptions())
       .then(setSummary)
       .catch((e) => setError(e instanceof Error ? e.message : "Erro ao carregar"));
   }, []);

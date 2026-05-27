@@ -4,11 +4,12 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("./services/meta-oauth.service", () => ({
   createOAuthState: vi.fn(() => "test-state"),
-  validateOAuthState: vi.fn(() => true),
+  validateOAuthState: vi.fn(() => "user-test"),
+  getOAuthScopes: vi.fn(() => "ads_read"),
   buildOAuthLoginUrl: vi.fn(
     () => "https://www.facebook.com/v25.0/dialog/oauth?client_id=test"
   ),
-  exchangeCodeForAccessToken: vi.fn(async () => ({
+  exchangeCodeForAccessToken: vi.fn(async (_code: string, _userId: string) => ({
     accessToken: "stored-token",
     obtainedAt: new Date().toISOString(),
     expiresAt: null
@@ -43,7 +44,9 @@ describe("meta controller", () => {
     const app = buildApp?.();
     if (!app) throw new Error("App não inicializado.");
 
-    const res = await request(app).get("/api/meta/status");
+    const res = await request(app)
+      .get("/api/meta/status")
+      .set("x-api-key", "1234567890abcdef-admin-key");
     expect(res.status).toBe(200);
     expect(res.body.appId).toBe("27447238071580159");
     expect(res.body.oauthConfigured).toBe(true);
@@ -53,7 +56,9 @@ describe("meta controller", () => {
     const app = buildApp?.();
     if (!app) throw new Error("App não inicializado.");
 
-    const res = await request(app).get("/api/meta/oauth/login");
+    const res = await request(app)
+      .get("/api/meta/oauth/login")
+      .set("x-api-key", "1234567890abcdef-admin-key");
     expect(res.status).toBe(302);
     expect(res.header.location).toContain("facebook.com");
   });

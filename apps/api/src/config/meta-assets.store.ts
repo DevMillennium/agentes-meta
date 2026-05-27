@@ -33,13 +33,14 @@ export function getMetaAssetsFilePath(): string {
   return assetsFilePath;
 }
 
-/** Resolve ID: .env > arquivo local */
+/** Resolve ID: .env > assets (contexto ou arquivo local) */
 export function resolveMetaAsset(
   envValue: string | undefined,
-  key: keyof MetaAssetsConfig
+  key: keyof MetaAssetsConfig,
+  assets: MetaAssetsConfig = loadMetaAssets()
 ): string | undefined {
   const fromEnv = envValue?.trim();
   if (fromEnv) return fromEnv;
-  const stored = loadMetaAssets()[key];
+  const stored = assets[key];
   return typeof stored === "string" && stored.trim() ? stored.trim() : undefined;
 }

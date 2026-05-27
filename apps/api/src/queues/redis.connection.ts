@@ -1,5 +1,9 @@
 import { env } from "../config/env";
 
+export function isRedisConfigured(): boolean {
+  return Boolean(env.REDIS_URL?.trim());
+}
+
 export function getRedisConnectionOptions(): {
   host: string;
   port: number;
@@ -7,6 +11,9 @@ export function getRedisConnectionOptions(): {
   password?: string;
   db?: number;
 } {
+  if (!isRedisConfigured()) {
+    throw new Error("REDIS_URL não configurada.");
+  }
   const redisUrl = new URL(env.REDIS_URL);
   const dbFromPath = redisUrl.pathname.replace("/", "");
   return {

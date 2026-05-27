@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE_URL } from "../lib/meta-config";
+import { getAuthHeaders } from "../lib/auth-client";
 import type { FacebookLoginStatusResponse } from "../types/facebook-sdk";
 import { useFacebookSdk } from "./facebook-sdk-provider";
 
@@ -21,7 +22,7 @@ export function MetaConnectPanel() {
   const [busy, setBusy] = useState(false);
 
   const refreshApiStatus = useCallback(async () => {
-    const res = await fetch(`${API_BASE_URL}/api/meta/status`);
+    const res = await fetch(`${API_BASE_URL}/api/meta/status`, { headers: getAuthHeaders() });
     if (res.ok) {
       setApiStatus((await res.json()) as MetaStatus);
     }
@@ -30,10 +31,15 @@ export function MetaConnectPanel() {
   const syncTokenToServer = useCallback(async (accessToken: string) => {
     const res = await fetch(`${API_BASE_URL}/api/meta/oauth/sdk-token`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ accessToken })
     });
-    const body = (await res.json()) as { ok?: boolean; error?: string; message?: string };
+    const body = (await res.json()) as {
+      ok?: boolean;
+      error?: string;
+      message?: string;
+      assets?: unknown;
+    };
     if (!res.ok || !body.ok) {
       throw new Error(body.error ?? "Falha ao salvar token no servidor.");
     }
@@ -140,7 +146,7 @@ export function MetaConnectPanel() {
             try {
               const res = await fetch(`${API_BASE_URL}/api/meta/sync-assets`, {
                 method: "POST",
-                headers: { "content-type": "application/json", "x-api-key": "phoenix-local-api-key-16" }
+                headers: getAuthHeaders()
               });
               const body = await res.json();
               setMessage(body.ok ? "Ativos Meta sincronizados." : body.error ?? "Erro ao sincronizar.");
@@ -161,9 +167,30 @@ export function MetaConnectPanel() {
         <button type="button" className="secondary" disabled={!isReady || busy} onClick={() => void handleLogout()}>
           Logout Facebook
         </button>
-        <a className="link-btn" href={`${API_BASE_URL}/api/meta/oauth/login`} target="_blank" rel="noreferrer">
-          OAuth servidor (alternativo)
-        </a>
+        <button
+          type="button"
+          className="secondary"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              const res = await fetch(`${API_BASE_URL}/api/meta/oauth/login-url`, {
+                headers: getAuthHeaders()
+              });
+              const body = (await res.json()) as { url?: string; error?: string };
+              if (!res.ok || !body.url) {
+                throw new Error(body.error ?? "Não foi possível iniciar OAuth.");
+              }
+              window.open(body.url, "_blank", "noopener,noreferrer");
+            } catch (error) {
+              setMessage(error instanceof Error ? error.message : "Erro OAuth.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          OAuth servidor (sua conta)
+        </button>
       </div>
 
       {message ? <p className="meta-message">{message}</p> : null}

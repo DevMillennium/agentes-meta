@@ -1,6 +1,9 @@
+import bcrypt from "bcryptjs";
 import express from "express";
 import request from "supertest";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+const testAdminPasswordHash = bcrypt.hashSync("super-secret-password", 10);
 
 interface ApprovalRecord {
   id: string;
@@ -19,6 +22,31 @@ const approvalStore: ApprovalRecord[] = [];
 
 vi.mock("../../common/prisma", () => ({
   prisma: {
+    user: {
+      findUnique: vi.fn(async ({ where }: { where: { email?: string } }) => {
+        if (where.email === "admin@phoenixglobal.com.br") {
+          return {
+            id: "admin-test",
+            email: "admin@phoenixglobal.com.br",
+            name: "Admin Test",
+            role: "admin",
+            passwordHash: testAdminPasswordHash,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+        }
+        return null;
+      }),
+      count: vi.fn(async () => 1),
+      create: vi.fn(),
+      upsert: vi.fn()
+    },
+    userMetaConnection: {
+      findUnique: vi.fn(async () => null),
+      upsert: vi.fn(),
+      updateMany: vi.fn(),
+      deleteMany: vi.fn()
+    },
     approvalRequest: {
       findMany: vi.fn(async () => [...approvalStore].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())),
       create: vi.fn(async ({ data }: { data: Omit<ApprovalRecord, "id" | "status" | "createdAt"> & { status?: ApprovalRecord["status"] } }) => {
@@ -105,7 +133,7 @@ describe("approvals integration flow", () => {
       .send({
         title: "Aprovar orçamento campanha AirPods",
         description: "Solicitação para validar orçamento máximo de R$ 50/dia",
-        requestedBy: "admin-local",
+        requestedBy: "admin-test",
         riskLevel: "MEDIUM",
         requestedData: { campaignType: "messages" }
       });
@@ -123,12 +151,12 @@ describe("approvals integration flow", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({
         status: "APPROVED",
-        decidedById: "admin-local",
+        decidedById: "admin-test",
         description: "Aprovado para execução controlada."
       });
 
     expect(decided.status).toBe(200);
     expect(decided.body.approval.status).toBe("APPROVED");
-    expect(decided.body.approval.decidedById).toBe("admin-local");
+    expect(decided.body.approval.decidedById).toBe("admin-test");
   });
 });

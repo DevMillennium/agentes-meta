@@ -1,3 +1,7 @@
+"use client";
+
+import { clearAuthToken } from "../lib/auth-client";
+
 const MENU_ITEMS: { label: string; href: string }[] = [
   { label: "Dashboard", href: "/" },
   { label: "Produtos", href: "/produtos" },
@@ -17,6 +21,17 @@ export function Sidebar() {
             {item.label}
           </a>
         ))}
+        <button
+          type="button"
+          className="menu-item"
+          style={{ width: "100%", border: "none", background: "transparent", cursor: "pointer", textAlign: "left" }}
+          onClick={() => {
+            clearAuthToken();
+            window.location.href = "/login";
+          }}
+        >
+          Sair
+        </button>
       </nav>
     </aside>
   );

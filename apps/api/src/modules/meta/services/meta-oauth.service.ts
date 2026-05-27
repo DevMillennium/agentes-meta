@@ -1,6 +1,9 @@
-import { randomBytes } from "node:crypto";
+import jwt from "jsonwebtoken";
 import { env, getMetaRedirectUri, isMetaOAuthConfigured } from "../../../config/env";
-import { saveStoredMetaToken, type StoredMetaToken } from "../../../config/meta-token.store";
+import {
+  saveUserMetaToken,
+  type StoredMetaToken
+} from "../../../config/meta-token.service";
 import { getMetaGraphPublicJson, MetaGraphRequestError } from "./meta-graph.client";
 
 const OAUTH_SCOPES = [
@@ -17,29 +20,22 @@ const OAUTH_SCOPES = [
   "instagram_content_publish"
 ].join(",");
 
-const pendingStates = new Map<string, number>();
-const STATE_TTL_MS = 10 * 60 * 1000;
+const STATE_PURPOSE = "meta_oauth";
 
-function pruneStates(): void {
-  const now = Date.now();
-  for (const [state, expires] of pendingStates) {
-    if (expires < now) pendingStates.delete(state);
+export function createOAuthState(userId: string): string {
+  return jwt.sign({ purpose: STATE_PURPOSE, userId }, env.JWT_SECRET, { expiresIn: "10m" });
+}
+
+export function validateOAuthState(state: string | undefined): string | null {
+  if (!state) return null;
+  try {
+    const decoded = jwt.verify(state, env.JWT_SECRET) as jwt.JwtPayload;
+    if (decoded.purpose !== STATE_PURPOSE) return null;
+    const userId = String(decoded.userId ?? "");
+    return userId || null;
+  } catch {
+    return null;
   }
-}
-
-export function createOAuthState(): string {
-  pruneStates();
-  const state = randomBytes(24).toString("hex");
-  pendingStates.set(state, Date.now() + STATE_TTL_MS);
-  return state;
-}
-
-export function validateOAuthState(state: string | undefined): boolean {
-  if (!state) return false;
-  const expires = pendingStates.get(state);
-  if (!expires) return false;
-  pendingStates.delete(state);
-  return expires >= Date.now();
 }
 
 export function buildOAuthLoginUrl(state: string): string {
@@ -99,8 +95,11 @@ function buildStoredToken(longLived: TokenResponse, shortLived?: TokenResponse):
   };
 }
 
-/** Troca token curto do JS SDK por long-lived e persiste no servidor. */
-export async function exchangeShortLivedAccessToken(shortLivedToken: string): Promise<StoredMetaToken> {
+/** Troca token curto do JS SDK por long-lived e persiste para o usuário. */
+export async function exchangeShortLivedAccessToken(
+  shortLivedToken: string,
+  userId: string
+): Promise<StoredMetaToken> {
   if (!isMetaOAuthConfigured()) {
     throw new Error("META_APP_ID e META_APP_SECRET são obrigatórios.");
   }
@@ -113,11 +112,14 @@ export async function exchangeShortLivedAccessToken(shortLivedToken: string): Pr
 
   const longLived = await exchangeForLongLivedToken(shortLivedToken);
   const stored = buildStoredToken(longLived);
-  saveStoredMetaToken(stored);
+  await saveUserMetaToken(userId, stored);
   return stored;
 }
 
-export async function exchangeCodeForAccessToken(code: string): Promise<StoredMetaToken> {
+export async function exchangeCodeForAccessToken(
+  code: string,
+  userId: string
+): Promise<StoredMetaToken> {
   if (!isMetaOAuthConfigured()) {
     throw new Error("META_APP_ID e META_APP_SECRET são obrigatórios.");
   }
@@ -146,7 +148,7 @@ export async function exchangeCodeForAccessToken(code: string): Promise<StoredMe
 
   const longLived = await exchangeForLongLivedToken(shortLived.access_token);
   const stored = buildStoredToken(longLived, shortLived);
-  saveStoredMetaToken(stored);
+  await saveUserMetaToken(userId, stored);
   return stored;
 }
 

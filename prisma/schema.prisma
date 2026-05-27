@@ -40,14 +40,31 @@ enum RiskLevel {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      String   @default("admin")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("operator")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  approvals ApprovalRequest[]
+  approvals      ApprovalRequest[]
+  metaConnection UserMetaConnection?
+}
+
+model UserMetaConnection {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken    String
+  tokenType      String?
+  expiresAt      DateTime?
+  obtainedAt     DateTime
+  scopes         String?
+  assetsJson     Json?
+  assetsSyncedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model BusinessAccount {

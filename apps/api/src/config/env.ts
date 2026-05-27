@@ -2,6 +2,7 @@ import { config as loadEnv } from "dotenv";
 import path from "node:path";
 import { z } from "zod";
 import { loadStoredMetaToken } from "./meta-token.store";
+import { getRequestUserId, requestContext } from "../common/request-context";
 
 const repoRoot = path.resolve(__dirname, "../../../..");
 loadEnv({ path: path.join(repoRoot, ".env") });
@@ -15,7 +16,9 @@ const envSchema = z.object({
   NODE_ENV: z.string().default("development"),
   PORT: z.coerce.number().default(4000),
   DATABASE_URL: z.string().min(1),
-  REDIS_URL: z.string().min(1),
+  REDIS_URL: z.string().optional().default(""),
+  API_PUBLIC_URL: z.string().url().optional().or(z.literal("")).default(""),
+  WEB_APP_URL: z.string().url().optional().or(z.literal("")).default(""),
   API_CORS_ORIGIN: z.string().default("http://localhost:3000"),
   ADMIN_API_KEY: z.string().min(16, "ADMIN_API_KEY deve ter pelo menos 16 caracteres."),
   ADMIN_EMAIL: z.string().email("ADMIN_EMAIL inválido."),
@@ -53,15 +56,55 @@ export const env = {
 };
 
 export function getMetaAccessToken(): string | undefined {
+  const fromContext = requestContext.getStore()?.metaAccessToken?.trim();
+  if (fromContext) return fromContext;
+
   const fromEnv = process.env.META_ACCESS_TOKEN?.trim();
   if (fromEnv) return fromEnv;
   return loadStoredMetaToken()?.accessToken?.trim() || env.META_ACCESS_TOKEN?.trim() || undefined;
 }
 
+export function getApiPublicUrl(): string {
+  const explicit = env.API_PUBLIC_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
+  }
+  return `http://localhost:${env.PORT}`;
+}
+
+export function getWebAppUrl(): string {
+  const explicit = env.WEB_APP_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  return env.API_CORS_ORIGIN.replace(/\/$/, "");
+}
+
 export function getMetaRedirectUri(): string {
   const explicit = env.META_REDIRECT_URI?.trim();
   if (explicit) return explicit;
-  return `http://localhost:${env.PORT}/api/meta/oauth/callback`;
+  return `${getApiPublicUrl()}/api/meta/oauth/callback`;
+}
+
+export function getCorsOrigins(): string[] {
+  const origins = new Set<string>();
+  for (const part of env.API_CORS_ORIGIN.split(",")) {
+    const trimmed = part.trim();
+    if (trimmed) origins.add(trimmed);
+  }
+  const web = getWebAppUrl();
+  if (web) origins.add(web);
+  origins.add(`http://localhost:${env.PORT}`);
+  origins.add("http://127.0.0.1:3000");
+  origins.add("http://localhost:3000");
+  if (process.env.VERCEL_URL) {
+    origins.add(`https://${process.env.VERCEL_URL}`);
+  }
+  return [...origins];
+}
+
+/** @deprecated use getRequestUserId — mantido para compatibilidade */
+export function getCurrentMetaUserId(): string | undefined {
+  return getRequestUserId();
 }
 
 export function isMetaOAuthConfigured(): boolean {

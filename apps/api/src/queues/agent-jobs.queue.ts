@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import { logger } from "../common/logger";
-import { getRedisConnectionOptions } from "./redis.connection";
+import { getRedisConnectionOptions, isRedisConfigured } from "./redis.connection";
 
 export const AGENT_ORCHESTRATION_QUEUE = "agent-orchestration";
 
@@ -31,6 +31,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 
 export async function enqueueAgentOrchestrationJob(payload: AgentOrchestrationJobPayload): Promise<void> {
+  if (!isRedisConfigured()) return;
   try {
     await withTimeout(
       getQueue().add("audit-orchestration-result", payload, {

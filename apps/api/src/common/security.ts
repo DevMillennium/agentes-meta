@@ -2,6 +2,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
+import { loadUserMetaAssets } from "../config/meta-assets.service";
+import { getMetaAccessTokenAsync } from "../config/meta-token.service";
+import { runWithUserContext } from "./request-context";
+import { authenticateUser } from "../modules/auth/users.service";
 
 export interface AuthenticatedUser {
   userId: string;
@@ -28,6 +32,20 @@ export function signAccessToken(user: AuthenticatedUser): string {
   });
 }
 
+async function attachUserContext(req: AuthenticatedRequest, next: NextFunction): Promise<void> {
+  const userId = req.user?.userId;
+  if (!userId || userId === "api-key-admin") {
+    next();
+    return;
+  }
+
+  const [metaAccessToken, metaAssets] = await Promise.all([
+    getMetaAccessTokenAsync(userId),
+    loadUserMetaAssets(userId)
+  ]);
+  runWithUserContext(userId, { metaAccessToken, metaAssets }, () => next());
+}
+
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   const apiKey = req.header("x-api-key");
   if (apiKey && apiKey === env.ADMIN_API_KEY) {
@@ -36,7 +54,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       email: env.ADMIN_EMAIL,
       role: "admin"
     };
-    next();
+    void attachUserContext(req, next);
     return;
   }
 
@@ -53,7 +71,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       email: String(decoded.email ?? ""),
       role: String(decoded.role ?? "viewer") as AuthenticatedUser["role"]
     };
-    next();
+    void attachUserContext(req, next);
   } catch {
     res.status(401).json({ error: "Token inválido ou expirado." });
   }
@@ -83,16 +101,11 @@ export function requireAdminAccess(req: AuthenticatedRequest, res: Response, nex
   requireAuth(req, res, () => requireRole(["admin"])(req, res, next));
 }
 
-export function authenticateAdminLogin(email: string, password: string): AuthenticatedUser | null {
-  if (email !== env.ADMIN_EMAIL || password !== env.ADMIN_PASSWORD) {
-    return null;
-  }
-
-  return {
-    userId: "admin-local",
-    email: env.ADMIN_EMAIL,
-    role: "admin"
-  };
+export async function authenticateAdminLogin(
+  email: string,
+  password: string
+): Promise<AuthenticatedUser | null> {
+  return authenticateUser(email, password);
 }
 
 export function requireAdminApiKey(req: Request, res: Response, next: NextFunction): void {

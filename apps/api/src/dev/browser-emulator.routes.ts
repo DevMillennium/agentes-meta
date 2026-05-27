@@ -35,6 +35,7 @@ const EMULATOR_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <h1>Emulador Phoenix API</h1>
+  <p class="muted"><a href="/console">Abrir Phoenix Console (agentes + Meta)</a></p>
   <p id="status" class="muted">Iniciando…</p>
 
   <section>
