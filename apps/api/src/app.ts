@@ -3,7 +3,6 @@ import express from "express";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
-import { logger } from "./common/logger";
 import { agentsRouter } from "./modules/agents/agents.controller";
 import { platformRouter } from "./modules/platform/platform.controller";
 import { productsRouter } from "./modules/products/products.controller";
@@ -24,6 +23,7 @@ import { recordWhatsAppDeliveryStatuses } from "./modules/webhooks/services/deli
 import { registerBrowserEmulatorRoutes } from "./dev/browser-emulator.routes";
 import { registerBrowserConsoleRoutes } from "./console/browser-console.routes";
 import { metaRouter } from "./modules/meta/meta.controller";
+import { getBootstrapError } from "./bootstrap";
 
 export function createApp(): express.Express {
   const app = express();
@@ -54,7 +54,7 @@ export function createApp(): express.Express {
     })
   );
   app.use(apiLimiter);
-  app.use(pinoHttp({ logger }));
+  app.use(pinoHttp());
   app.use(
     "/webhooks",
     express.raw({
@@ -64,7 +64,13 @@ export function createApp(): express.Express {
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
-    res.json({ ok: true, service: "phoenix-api", timestamp: new Date().toISOString() });
+    const bootstrapErr = getBootstrapError();
+    res.status(bootstrapErr ? 503 : 200).json({
+      ok: !bootstrapErr,
+      service: "phoenix-api",
+      timestamp: new Date().toISOString(),
+      bootstrapError: bootstrapErr
+    });
   });
 
   registerBrowserEmulatorRoutes(app);

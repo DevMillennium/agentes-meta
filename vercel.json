@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "npx prisma generate && npm run build --workspace @phoenix/api",
+  "buildCommand": "npx prisma generate && npm run build --workspace @phoenix/api && npm run typecheck --workspace @phoenix/api",
   "builds": [
     {
       "src": "api/index.ts",

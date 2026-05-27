@@ -28,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <main className="content" style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+      <main className="content auth-guard-loading">
         <p className="muted">Carregando sessão…</p>
       </main>
     );

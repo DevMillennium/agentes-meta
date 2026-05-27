@@ -23,8 +23,7 @@ export function Sidebar() {
         ))}
         <button
           type="button"
-          className="menu-item"
-          style={{ width: "100%", border: "none", background: "transparent", cursor: "pointer", textAlign: "left" }}
+          className="menu-item menu-item-button"
           onClick={() => {
             clearAuthToken();
             window.location.href = "/login";
