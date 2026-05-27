@@ -1,5 +1,5 @@
-import axios, { type AxiosError } from "axios";
-import { env } from "../../../config/env";
+import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
+import { getMetaAccessToken } from "../../../config/env";
 import { logger } from "../../../common/logger";
 
 function sleep(ms: number): Promise<void> {
@@ -35,23 +35,36 @@ export class MetaGraphRequestError extends Error {
   }
 }
 
-export async function postMetaGraphJson<T = unknown>(url: string, body: unknown): Promise<T> {
-  const token = env.META_ACCESS_TOKEN;
-  if (!token) {
-    throw new MetaGraphRequestError("META_ACCESS_TOKEN não configurado.");
+function extractErrorMessage(payload: MetaGraphErrorPayload | undefined, status: number): string {
+  return payload?.error?.message ?? payload?.message ?? `Graph API retornou HTTP ${status}`;
+}
+
+async function requestMetaGraph<T>(
+  config: AxiosRequestConfig,
+  requireToken = true
+): Promise<T> {
+  const token = getMetaAccessToken();
+  if (requireToken && !token) {
+    throw new MetaGraphRequestError("META_ACCESS_TOKEN não configurado. Use /api/meta/oauth/login.");
   }
 
-  const attempts = Math.max(1, env.META_HTTP_RETRIES + 1);
+  const attempts = Math.max(1, (Number(process.env.META_HTTP_RETRIES) || 2) + 1);
   let lastError: unknown;
+  const timeout = Number(process.env.META_HTTP_TIMEOUT_MS) || 15000;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const response = await axios.post<T>(url, body, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        timeout: env.META_HTTP_TIMEOUT_MS,
+      const headers: Record<string, string> = {
+        ...(config.headers as Record<string, string> | undefined)
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await axios.request<T>({
+        ...config,
+        headers,
+        timeout,
         validateStatus: () => true
       });
 
@@ -60,17 +73,14 @@ export async function postMetaGraphJson<T = unknown>(url: string, body: unknown)
       }
 
       const payload = response.data as MetaGraphErrorPayload | undefined;
-      const msg =
-        payload?.error?.message ??
-        payload?.message ??
-        `Graph API retornou HTTP ${response.status}`;
+      const msg = extractErrorMessage(payload, response.status);
 
       if (!isRetryableStatus(response.status) || attempt === attempts) {
         throw new MetaGraphRequestError(msg, response.status, payload);
       }
 
       logger.warn(
-        { url, status: response.status, attempt, attempts },
+        { url: config.url, status: response.status, attempt, attempts },
         "Meta Graph: resposta não bem-sucedida, tentando novamente."
       );
     } catch (error) {
@@ -90,11 +100,35 @@ export async function postMetaGraphJson<T = unknown>(url: string, body: unknown)
         );
       }
 
-      logger.warn({ url, status, attempt, attempts }, "Meta Graph: erro de rede, tentando novamente.");
+      logger.warn({ url: config.url, status, attempt, attempts }, "Meta Graph: erro de rede, tentando novamente.");
     }
 
     await sleep(400 * attempt);
   }
 
   throw lastError instanceof Error ? lastError : new Error("Falha desconhecida ao chamar Graph API");
+}
+
+export async function getMetaGraphJson<T = unknown>(
+  url: string,
+  params?: Record<string, string | number | boolean | undefined>
+): Promise<T> {
+  return requestMetaGraph<T>({ method: "GET", url, params });
+}
+
+export async function postMetaGraphJson<T = unknown>(url: string, body: unknown): Promise<T> {
+  return requestMetaGraph<T>({
+    method: "POST",
+    url,
+    data: body,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+/** Chamadas OAuth / debug sem Bearer do usuário. */
+export async function getMetaGraphPublicJson<T = unknown>(
+  url: string,
+  params?: Record<string, string | number | boolean | undefined>
+): Promise<T> {
+  return requestMetaGraph<T>({ method: "GET", url, params }, false);
 }

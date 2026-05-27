@@ -72,7 +72,9 @@ describe("approvals integration flow", () => {
     process.env.JWT_EXPIRES_IN = "12h";
     process.env.ENABLE_WORKERS = "false";
     process.env.OPENAI_API_KEY = "test-openai-key";
-    process.env.META_API_VERSION = "v21.0";
+    process.env.META_APP_ID = "27447238071580159";
+    process.env.META_APP_SECRET = "test-app-secret";
+    process.env.META_API_VERSION = "v25.0";
     process.env.META_WEBHOOK_VERIFY_TOKEN = "verify-token-test";
 
     const imported = await import("../../app");
@@ -126,7 +128,7 @@ describe("approvals integration flow", () => {
       });
 
     expect(decided.status).toBe(200);
-    expect(decided.body.status).toBe("APPROVED");
-    expect(decided.body.decidedById).toBe("admin-local");
+    expect(decided.body.approval.status).toBe("APPROVED");
+    expect(decided.body.approval.decidedById).toBe("admin-local");
   });
 });

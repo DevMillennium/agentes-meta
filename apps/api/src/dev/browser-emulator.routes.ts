@@ -5,7 +5,9 @@ const devConfigJson = JSON.stringify({
   adminEmail: env.ADMIN_EMAIL,
   adminPassword: env.ADMIN_PASSWORD,
   adminApiKey: env.ADMIN_API_KEY,
-  metaAppSecret: env.META_APP_SECRET ?? "test-app-secret-local"
+  metaAppSecret: env.META_APP_SECRET ?? "test-app-secret-local",
+  metaAppId: env.META_APP_ID ?? "",
+  metaOAuthLoginUrl: "/api/meta/oauth/login"
 });
 
 const EMULATOR_HTML = `<!DOCTYPE html>
@@ -66,6 +68,21 @@ const EMULATOR_HTML = `<!DOCTYPE html>
       <button type="button" id="btn-orchestrate">POST /api/agents/orchestrate</button>
     </div>
     <pre id="out-api">{}</pre>
+  </section>
+
+  <section>
+    <h2>Meta (Marketing API + OAuth)</h2>
+    <p class="muted">App: Phoenix Marketing Automat · Conecte o token Meta antes de testar campanhas/insights.</p>
+    <div class="row">
+      <a id="link-meta-oauth" href="/api/meta/oauth/login" target="_blank" rel="noopener"><button type="button">Conectar Meta (OAuth)</button></a>
+      <button type="button" id="btn-meta-status">GET /api/meta/status</button>
+      <button type="button" id="btn-meta-me">GET /api/meta/me</button>
+      <button type="button" id="btn-meta-accounts">GET /api/meta/adaccounts</button>
+      <button type="button" id="btn-meta-insights">POST /api/meta/insights</button>
+    </div>
+    <label for="meta-object-id">objectId (campaign ou act_XXX)</label>
+    <input id="meta-object-id" type="text" placeholder="act_... ou ID da campanha" />
+    <pre id="out-meta">{}</pre>
   </section>
 
   <section>
@@ -173,6 +190,23 @@ const EMULATOR_JS = `
   $("btn-approvals").addEventListener("click", () => getJson("/api/approvals", "out-api"));
 
   $("btn-products").addEventListener("click", () => getJson("/api/products", "out-api"));
+
+  $("btn-meta-status").addEventListener("click", () => getJson("/api/meta/status", "out-meta"));
+
+  $("btn-meta-me").addEventListener("click", () => getJson("/api/meta/me", "out-meta"));
+
+  $("btn-meta-accounts").addEventListener("click", () => getJson("/api/meta/adaccounts", "out-meta"));
+
+  $("btn-meta-insights").addEventListener("click", async () => {
+    const objectId = $("meta-object-id").value.trim();
+    const res = await fetch("/api/meta/insights", {
+      method: "POST",
+      headers: headersJson(),
+      body: JSON.stringify({ objectId: objectId || undefined, datePreset: "last_7d" })
+    });
+    const body = await res.json().catch(() => null);
+    out("out-meta", { status: res.status, body });
+  });
 
   $("btn-orchestrate").addEventListener("click", async () => {
     const res = await fetch("/api/agents/orchestrate", {

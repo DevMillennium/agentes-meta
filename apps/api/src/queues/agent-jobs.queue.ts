@@ -23,9 +23,17 @@ function getQueue(): Queue {
   return queueInstance;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Redis timeout")), ms))
+  ]);
+}
+
 export async function enqueueAgentOrchestrationJob(payload: AgentOrchestrationJobPayload): Promise<void> {
   try {
-    await getQueue().add("audit-orchestration-result", payload, {
+    await withTimeout(
+      getQueue().add("audit-orchestration-result", payload, {
       attempts: 3,
       backoff: {
         type: "exponential",
@@ -33,7 +41,9 @@ export async function enqueueAgentOrchestrationJob(payload: AgentOrchestrationJo
       },
       removeOnComplete: 1000,
       removeOnFail: 500
-    });
+      }),
+      1500
+    );
   } catch (error) {
     logger.warn({ error, payload }, "Falha ao enfileirar job de orquestração.");
   }

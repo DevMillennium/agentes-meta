@@ -22,26 +22,88 @@ export class AgentOrchestrator {
 
     const directorDecision = await this.registry.marketingDirector.analyze(input, context);
     const productDecision = await this.registry.productManager.analyze(input, context);
-    const copyDecision = await this.registry.adCopywriter.analyze(input, context);
+
+    if (!productDecision.payload || !(productDecision.payload as { valid?: boolean }).valid) {
+      return {
+        success: false,
+        message: "Produto indisponível ou sem estoque.",
+        data: { productDecision }
+      };
+    }
+
+    const copyDecision = await this.registry.adCopywriter.analyze(
+      { ...input, directorDecision: directorDecision.payload },
+      context
+    );
+
     const complianceDecision = await this.registry.metaCompliance.analyze(
-      { ...input, copy: copyDecision.payload },
+      { copy: copyDecision.payload },
       context
     );
 
     if (complianceDecision.riskLevel === "high") {
       return {
         success: false,
-        message: "Fluxo interrompido: MetaComplianceAgent bloqueou a publicação.",
-        data: { complianceDecision }
+        message: "Fluxo interrompido: MetaComplianceAgent bloqueou o conteúdo.",
+        data: { complianceDecision, copyDecision }
       };
     }
 
+    const postDecision = await this.registry.postCreator.analyze(input, context);
+
+    const copyPayload = copyDecision.payload as { creativeId?: string };
     const trafficDecision = await this.registry.paidTrafficStrategist.analyze(
-      { ...input, directorDecision, productDecision, copyDecision },
+      {
+        ...input,
+        directorDecision: directorDecision.payload,
+        productDecision: productDecision.payload,
+        creativeId: copyPayload.creativeId,
+        copyDecision: copyPayload,
+        postDecision: postDecision.payload
+      },
       context
     );
 
-    return this.executeWithApprovalGuard(this.registry.paidTrafficStrategist, trafficDecision, context);
+    const postResult = await this.registry.postCreator.execute(
+      {
+        agentName: "PostCreatorAgent",
+        actionType: "generate_content_posts",
+        riskLevel: "low",
+        reason: "Publicação Instagram após compliance.",
+        payload: postDecision.payload as { caption: string; hashtags: string[]; imageUrl: string },
+        requiresApproval: false
+      },
+      context
+    );
+
+    const trafficResult = await this.executeWithApprovalGuard(
+      this.registry.paidTrafficStrategist,
+      trafficDecision,
+      context
+    );
+
+    if (!trafficResult.success && !("pendingApproval" in (trafficResult.data as object))) {
+      return trafficResult;
+    }
+
+    await this.registry.crmFollowUp.analyze(
+      { ...input, campaignResult: trafficResult.data },
+      context
+    );
+
+    return {
+      success: true,
+      message: "Ciclo de marketing concluído.",
+      data: {
+        traceId: context.traceId,
+        directorDecision: directorDecision.payload,
+        productDecision: productDecision.payload,
+        copyDecision: copyDecision.payload,
+        postDecision: postDecision.payload,
+        postPublish: postResult.data,
+        trafficResult
+      }
+    };
   }
 
   private async executeWithApprovalGuard(
@@ -49,11 +111,18 @@ export class AgentOrchestrator {
     decision: Awaited<ReturnType<IAgent["analyze"]>>,
     context: AgentContext
   ): Promise<AgentExecutionResult> {
-    if (decision.requiresApproval || decision.riskLevel !== "low") {
+    if (decision.requiresApproval || decision.riskLevel === "high") {
       return {
         success: true,
         message: "Ação gerou solicitação de aprovação antes da execução.",
-        data: { pendingApproval: decision }
+        data: {
+          pendingApproval: {
+            agentName: decision.agentName,
+            riskLevel: decision.riskLevel,
+            reason: decision.reason,
+            payload: decision.payload
+          }
+        }
       };
     }
 

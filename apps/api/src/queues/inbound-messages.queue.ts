@@ -16,9 +16,17 @@ function getQueue(): Queue {
   return queueInstance;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Redis timeout")), ms))
+  ]);
+}
+
 export async function enqueueInboundMessageEvent(event: InboundMessageEvent): Promise<void> {
   try {
-    await getQueue().add("process-inbound-message", event, {
+    await withTimeout(
+      getQueue().add("process-inbound-message", event, {
       attempts: 3,
       backoff: {
         type: "exponential",
@@ -26,7 +34,9 @@ export async function enqueueInboundMessageEvent(event: InboundMessageEvent): Pr
       },
       removeOnComplete: 1000,
       removeOnFail: 500
-    });
+      }),
+      1500
+    );
   } catch (error) {
     logger.warn({ error, event }, "Falha ao enfileirar mensagem inbound.");
   }

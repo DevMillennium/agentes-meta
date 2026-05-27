@@ -8,6 +8,7 @@ import { AgentOrchestrator } from "./modules/agents/services/agent.orchestrator"
 import { defaultAgents } from "./modules/agents/services/default-agents";
 import { productsRouter } from "./modules/products/products.controller";
 import { campaignsRouter } from "./modules/campaigns/campaigns.controller";
+import { conversationsRouter } from "./modules/conversations/conversations.controller";
 import { approvalsRouter } from "./modules/approvals/approvals.controller";
 import { authRouter } from "./modules/auth/auth.controller";
 import { env } from "./config/env";
@@ -22,6 +23,7 @@ import { enqueueInboundMessageEvent } from "./queues/inbound-messages.queue";
 import { processInboundMessageEvent } from "./modules/webhooks/services/inbound-events.service";
 import { recordWhatsAppDeliveryStatuses } from "./modules/webhooks/services/delivery-status.service";
 import { registerBrowserEmulatorRoutes } from "./dev/browser-emulator.routes";
+import { metaRouter } from "./modules/meta/meta.controller";
 
 export function createApp(): express.Express {
   const app = express();
@@ -60,8 +62,10 @@ export function createApp(): express.Express {
   registerBrowserEmulatorRoutes(app);
 
   app.use("/api/auth", authRouter);
+  app.use("/api/meta", metaRouter);
   app.use("/api/products", requireOperatorAccess, productsRouter);
   app.use("/api/campaigns", requireOperatorAccess, campaignsRouter);
+  app.use("/api/conversations", requireOperatorAccess, conversationsRouter);
   app.use("/api/approvals", requireOperatorAccess, approvalsRouter);
 
   app.post("/api/agents/orchestrate", requireOperatorAccess, async (req, res) => {
@@ -100,7 +104,7 @@ export function createApp(): express.Express {
       });
     }
 
-    await enqueueAgentOrchestrationJob({
+    void enqueueAgentOrchestrationJob({
       traceId: String((result.data as { traceId?: string } | undefined)?.traceId ?? "not-provided"),
       productId: String(req.body?.productId ?? "placeholder-product-id"),
       objective: String(req.body?.objective ?? "Vender produto prioritário"),

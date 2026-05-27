@@ -2,6 +2,7 @@ import { Router } from "express";
 import { ApprovalStatus, RiskLevel } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../common/prisma";
+import { executeApprovedRequest } from "./approval-execution.service";
 
 export const approvalsRouter = Router();
 
@@ -74,5 +75,10 @@ approvalsRouter.post("/:id/decide", async (req, res) => {
     }
   });
 
-  res.json(approval);
+  let execution: Record<string, unknown> | undefined;
+  if (parsed.data.status === "APPROVED") {
+    execution = await executeApprovedRequest(approval);
+  }
+
+  res.json({ approval, execution });
 });

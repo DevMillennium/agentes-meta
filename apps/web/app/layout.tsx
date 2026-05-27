@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Phoenix Global Marketing AI Team",
-  description: "Dashboard inicial da operacao multiagente de marketing."
+  title: "Phoenix Global Market Automat",
+  description: "Dashboard da operacao multiagente de marketing Meta."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
