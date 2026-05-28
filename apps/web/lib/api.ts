@@ -6,12 +6,11 @@ export function getApiUrl(path: string): string {
 
 export async function fetchApi<T>(
   path: string,
-  options?: RequestInit & { token?: string; apiKey?: string }
+  options?: RequestInit & { token?: string }
 ): Promise<T> {
   const headers = new Headers(options?.headers);
   headers.set("content-type", "application/json");
   if (options?.token) headers.set("authorization", `Bearer ${options.token}`);
-  if (options?.apiKey) headers.set("x-api-key", options.apiKey);
 
   const res = await fetch(getApiUrl(path), { ...options, headers, cache: "no-store" });
   if (!res.ok) {

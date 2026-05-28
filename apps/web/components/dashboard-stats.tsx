@@ -26,7 +26,7 @@ export function DashboardStats() {
   if (error) {
     return (
       <p className="muted">
-        API offline ou sem auth. Rode a API e defina <code>NEXT_PUBLIC_ADMIN_API_KEY</code> no .env.
+        API offline ou sem sessão válida. Faça login no sistema e valide se a API está rodando.
       </p>
     );
   }

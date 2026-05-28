@@ -5,6 +5,8 @@ api/phoenix-dist
 build
 .env
 .env.local
+.env.vercel*
+.env.source*
 .meta-token.local.json
 .meta-assets.local.json
 .DS_Store
@@ -15,3 +17,6 @@ pnpm-lock.yaml
 package-lock.json
 yarn.lock
 .vercel
+agents/logs/actions/*.log
+agents/logs/errors/*.log
+agents/logs/screenshots/*.png

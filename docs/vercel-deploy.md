@@ -79,7 +79,8 @@ Admin pode criar mais usuários: `POST /api/auth/users` (Bearer admin).
 | `NEXT_PUBLIC_API_URL` | Sim | `https://SEU-API.vercel.app` |
 | `NEXT_PUBLIC_META_APP_ID` | Sim | Mesmo `META_APP_ID` |
 | `NEXT_PUBLIC_META_API_VERSION` | Não | `v25.0` |
-| `NEXT_PUBLIC_ADMIN_API_KEY` | Não | Opcional; prefira login JWT |
+
+Use login JWT no web; não exponha chave administrativa no frontend.
 
 ## 4. Meta Developer Console
 

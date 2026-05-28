@@ -148,6 +148,15 @@ const CONSOLE_JS = `
     });
   }
 
+  async function openMetaOAuthServer() {
+    const r = await api("/api/meta/oauth/login-url");
+    if (!r.ok || !r.body?.url) {
+      alert("Falha ao iniciar OAuth Meta: " + (r.body?.error || r.status));
+      return;
+    }
+    window.open(r.body.url, "_blank", "noopener,noreferrer");
+  }
+
   function renderPlatform(session) {
     const m = session.platform.meta;
     $("tab-platform").innerHTML = \`
@@ -164,13 +173,15 @@ const CONSOLE_JS = `
         <p class="muted">WhatsApp \${m.whatsappReady?"✓":"—"} · Instagram \${m.instagramReady?"✓":"—"} · Ads \${m.marketingReady?"✓":"—"}</p>
         <p class="muted">Expira: \${m.tokenExpiresAt || "—"} · Ativos sync: \${m.assetsSyncedAt || "—"}</p>
         <div class="row" style="margin-top:.75rem">
-          <a class="btn" href="/api/meta/oauth/login" target="_blank">Conectar Meta OAuth</a>
+          <button class="btn" id="btn-meta-oauth-platform">Conectar Meta OAuth</button>
         </div>
       </div>
       <div class="card">
         <h3>Operação</h3>
         <p>\${session.platform.agents.total} agentes · \${session.platform.stats.leads} leads · \${session.platform.stats.conversations} conversas</p>
       </div>\`;
+    const btn = $("btn-meta-oauth-platform");
+    if (btn) btn.onclick = () => void openMetaOAuthServer();
   }
 
   async function renderUsers() {
@@ -215,12 +226,13 @@ const CONSOLE_JS = `
       <div class="card">
         <p>Conecte o app <strong>Phoenix Marketing Automat</strong> direto aos sistemas Meta.</p>
         <div class="row">
-          <a class="btn" href="/api/meta/oauth/login" target="_blank">OAuth servidor (recomendado)</a>
+          <button class="btn" id="btn-meta-oauth-server">OAuth servidor (recomendado)</button>
           <button class="btn secondary" id="btn-sync-meta">Sincronizar ativos</button>
           <button class="btn secondary" id="btn-meta-status">Atualizar status</button>
         </div>
         <pre id="meta-out">{}</pre>
       </div>\`;
+    $("btn-meta-oauth-server").onclick = () => void openMetaOAuthServer();
     $("btn-sync-meta").onclick = async () => {
       const r = await api("/api/meta/sync-assets", { method: "POST" });
       $("meta-out").textContent = JSON.stringify(r, null, 2);

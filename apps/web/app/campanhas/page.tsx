@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sidebar } from "../../components/sidebar";
 import { fetchApi } from "../../lib/api";
+import { getAuthFetchOptions } from "../../lib/auth-client";
 
 interface Campaign {
   id: string;
@@ -16,7 +17,7 @@ export default function CampanhasPage() {
   const [items, setItems] = useState<Campaign[]>([]);
 
   useEffect(() => {
-    fetchApi<{ items: Campaign[] }>("/api/campaigns", { apiKey: "phoenix-local-api-key-16" })
+    fetchApi<{ items: Campaign[] }>("/api/campaigns", getAuthFetchOptions())
       .then((data) => setItems(data.items))
       .catch(() => setItems([]));
   }, []);

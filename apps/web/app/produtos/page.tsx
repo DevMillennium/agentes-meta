@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sidebar } from "../../components/sidebar";
 import { fetchApi } from "../../lib/api";
+import { getAuthFetchOptions } from "../../lib/auth-client";
 
 interface Product {
   id: string;
@@ -17,7 +18,7 @@ export default function ProdutosPage() {
   const [items, setItems] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetchApi<{ items: Product[] }>("/api/products", { apiKey: "phoenix-local-api-key-16" })
+    fetchApi<{ items: Product[] }>("/api/products", getAuthFetchOptions())
       .then((data) => setItems(data.items))
       .catch(() => setItems([]));
   }, []);

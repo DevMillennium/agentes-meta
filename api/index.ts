@@ -1,27 +1,24 @@
-import serverless from "serverless-http";
 import type { Request, Response } from "express";
 import { createApp } from "../apps/api/src/app";
 import { ensureBootstrap } from "../apps/api/src/bootstrap";
 
-let handler: ReturnType<typeof serverless> | null = null;
+const app = createApp();
+let bootstrapStarted = false;
 let initError: string | null = null;
 
-async function getHandler(): Promise<ReturnType<typeof serverless>> {
-  if (initError) throw new Error(initError);
-  if (handler) return handler;
+function startBootstrapOnce(): void {
+  if (bootstrapStarted) return;
+  bootstrapStarted = true;
+  void ensureBootstrap().catch((error: unknown) => {
+    initError = error instanceof Error ? error.message : "Falha no bootstrap.";
+    console.error("[phoenix-api] bootstrap background error:", error);
+  });
+}
 
-  try {
-    handler = serverless(createApp());
-    // Não bloquear cold start em operações de banco; bootstrap roda em segundo plano.
-    void ensureBootstrap().catch((error: unknown) => {
-      initError = error instanceof Error ? error.message : "Falha no bootstrap.";
-      console.error("[phoenix-api] bootstrap background error:", error);
-    });
-    return handler;
-  } catch (error) {
-    initError = error instanceof Error ? error.message : "Falha ao iniciar API.";
-    throw error;
-  }
+async function getHandler(): Promise<(req: Request, res: Response) => unknown> {
+  if (initError) throw new Error(initError);
+  startBootstrapOnce();
+  return app;
 }
 
 export default async function vercelHandler(req: Request, res: Response) {

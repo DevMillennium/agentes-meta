@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getStoredAuthToken, getApiKey } from "../lib/auth-client";
+import { getStoredAuthToken } from "../lib/auth-client";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -18,7 +18,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const hasAuth = Boolean(getStoredAuthToken() || getApiKey());
+    const hasAuth = Boolean(getStoredAuthToken());
     if (!hasAuth) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
       return;

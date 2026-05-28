@@ -42,6 +42,26 @@ export function createApp(): express.Express {
       ip: false
     }
   });
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: false,
+    legacyHeaders: false,
+    validate: {
+      ip: false
+    },
+    message: { error: "Muitas tentativas de autenticação. Tente novamente em alguns minutos." }
+  });
+  const webhookLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 180,
+    standardHeaders: false,
+    legacyHeaders: false,
+    validate: {
+      ip: false
+    },
+    message: { error: "Muitas chamadas de webhook. Tente novamente." }
+  });
 
   const corsOrigins = getCorsOrigins();
 
@@ -62,12 +82,12 @@ export function createApp(): express.Express {
       contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false
     })
   );
-  if (env.NODE_ENV !== "production") {
-    app.use(apiLimiter);
-  }
+  app.use("/api", apiLimiter);
+  app.use("/api/auth/login", authLimiter);
   app.use(pinoHttp());
   app.use(
     "/webhooks",
+    webhookLimiter,
     express.raw({
       type: "*/*"
     })

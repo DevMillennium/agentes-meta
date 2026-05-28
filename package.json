@@ -23,16 +23,23 @@
     "emulate:ci": "EMULATE_NO_WAIT=1 bash scripts/emulate.sh",
     "meta:bootstrap": "bash scripts/meta-bootstrap.sh",
     "meta:bootstrap:prod": "bash scripts/meta-bootstrap-prod.sh",
+    "ops:go-live-check": "bash scripts/ops-go-live-check.sh",
+    "ops:open-portals": "bash scripts/open-ops-portals.sh",
     "bootstrap": "bash scripts/bootstrap-full.sh",
     "seed:products": "curl -sf -X POST http://localhost:4000/api/products/seed/default -H \"x-api-key: phoenix-local-api-key-16\"",
     "postinstall": "prisma generate",
     "vercel-build:web": "prisma generate && npm run build --workspace @phoenix/web",
     "vercel-build:api": "bash scripts/vercel-prepare-api.sh",
-    "predeploy:api": "npm run vercel-build:api"
+    "predeploy:api": "npm run vercel-build:api",
+    "agent:browser": "npx tsx agents/browser-agent/browser-agent.ts",
+    "agent:mac": "npx tsx agents/mac-agent/mac-agent.ts",
+    "agent:supervisor": "npx tsx agents/supervisor-agent/supervisor-agent.ts",
+    "agent:tools": "npx tsx agents/tools-registry/list-tools.ts"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "eslint": "^10.4.0",
+    "playwright": "^1.60.0",
     "prettier": "^3.8.3",
     "prisma": "^6.9.0",
     "typescript": "^5.8.3"

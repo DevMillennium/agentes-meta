@@ -26,16 +26,9 @@ export function clearAuthToken(): void {
   }
 }
 
-export function getApiKey(): string | undefined {
-  const key = process.env.NEXT_PUBLIC_ADMIN_API_KEY?.trim();
-  return key || undefined;
-}
-
-export function getAuthFetchOptions(): { token?: string; apiKey?: string } {
+export function getAuthFetchOptions(): { token?: string } {
   const token = getStoredAuthToken();
   if (token) return { token };
-  const apiKey = getApiKey();
-  if (apiKey) return { apiKey };
   return {};
 }
 
@@ -43,6 +36,5 @@ export function getAuthHeaders(): HeadersInit {
   const opts = getAuthFetchOptions();
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (opts.token) headers.authorization = `Bearer ${opts.token}`;
-  if (opts.apiKey) headers["x-api-key"] = opts.apiKey;
   return headers;
 }
