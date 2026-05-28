@@ -32,6 +32,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional().default(""),
   META_APP_ID: z.string().optional().default(""),
   META_APP_SECRET: z.string().optional(),
+  META_CLIENT_TOKEN: z.string().optional().default(""),
   META_REDIRECT_URI: z.string().optional().default(""),
   META_API_VERSION: z.string().default("v25.0"),
   META_ACCESS_TOKEN: z.string().optional(),

@@ -28,7 +28,7 @@ import { registerBrowserLeadsRoutes } from "./tools/browser-leads.routes";
 import { registerBrowserAuthRoutes } from "./shared/browser-auth.routes";
 import { AGENT_CATALOG } from "./modules/agents/services/agent-catalog";
 import { metaRouter } from "./modules/meta/meta.controller";
-import { getBootstrapError } from "./bootstrap";
+import { ensureBootstrap, getBootstrapError, isBootstrapped } from "./bootstrap";
 
 export function createApp(): express.Express {
   const app = express();
@@ -95,12 +95,19 @@ export function createApp(): express.Express {
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
+    const ready = isBootstrapped();
+    if (!ready) {
+      // Auto-recuperação: dispara nova tentativa (idempotente) sem bloquear a resposta.
+      void ensureBootstrap();
+    }
     const bootstrapErr = getBootstrapError();
-    res.status(bootstrapErr ? 503 : 200).json({
-      ok: !bootstrapErr,
+    const ok = ready || !bootstrapErr;
+    res.status(ok ? 200 : 503).json({
+      ok,
       service: "phoenix-api",
+      ready,
       timestamp: new Date().toISOString(),
-      bootstrapError: bootstrapErr
+      bootstrapError: ready ? null : bootstrapErr
     });
   });
 
