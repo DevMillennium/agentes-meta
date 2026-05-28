@@ -52,6 +52,15 @@ sync_project() {
     value="${value#\'}"
     [[ -z "$key" || -z "$value" ]] && continue
 
+    if [[ "$key" == "DATABASE_URL" && "$value" == *localhost* ]]; then
+      echo "  ⊘ $key (ignorado: localhost — defina Postgres na nuvem no painel Vercel)"
+      continue
+    fi
+    if [[ "$key" == "REDIS_URL" && "$value" == *localhost* ]]; then
+      echo "  ⊘ $key (ignorado: localhost)"
+      continue
+    fi
+
     if [[ "$target" == "web" ]]; then
       [[ "$key" == NEXT_PUBLIC_* ]] || continue
     else

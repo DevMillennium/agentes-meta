@@ -30,6 +30,7 @@
     "meta:fix-oauth-redirect": "bash scripts/meta-fix-oauth-redirect.sh",
     "meta:setup:cloud": "bash scripts/meta-setup-cloud.sh",
     "vercel:sync:cloud": "bash scripts/vercel-sync-cloud-env.sh",
+    "meta:push-token:vercel": "bash scripts/meta-push-token-to-vercel.sh",
     "bootstrap": "bash scripts/bootstrap-full.sh",
     "seed:products": "curl -sf -X POST http://localhost:4000/api/products/seed/default -H \"x-api-key: phoenix-local-api-key-16\"",
     "postinstall": "prisma generate",
