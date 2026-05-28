@@ -25,6 +25,7 @@
     "meta:bootstrap:prod": "bash scripts/meta-bootstrap-prod.sh",
     "ops:go-live-check": "bash scripts/ops-go-live-check.sh",
     "ops:open-portals": "bash scripts/open-ops-portals.sh",
+    "meta:connect-chrome": "bash scripts/meta-connect-chrome.sh",
     "bootstrap": "bash scripts/bootstrap-full.sh",
     "seed:products": "curl -sf -X POST http://localhost:4000/api/products/seed/default -H \"x-api-key: phoenix-local-api-key-16\"",
     "postinstall": "prisma generate",

@@ -41,9 +41,19 @@ O token OAuth é salvo em `.meta-token.local.json` (gitignored) após login.
 4. Autorize as permissões
 5. Verifique: [http://localhost:4000/api/meta/status](http://localhost:4000/api/meta/status) → `hasAccessToken: true`
 
-No **App Dashboard** → Facebook Login → Configurações → URIs de redirecionamento OAuth válidos, adicione:
+No **App Dashboard** → Facebook Login → Configurações → URIs de redirecionamento OAuth válidos, adicione as URLs retornadas por:
 
-`http://localhost:4000/api/meta/oauth/callback`
+```bash
+API_KEY="sua-admin-api-key" curl -s http://localhost:4000/api/meta/console-settings -H "x-api-key: $API_KEY" | jq '.facebookLoginSettings.validOAuthRedirectUris'
+```
+
+Ou abra o checklist no Chrome:
+
+```bash
+npm run meta:connect-chrome
+```
+
+Mínimo local: `http://localhost:4000/api/meta/oauth/callback`
 
 ## 3. Produtos no app (já adicionados)
 

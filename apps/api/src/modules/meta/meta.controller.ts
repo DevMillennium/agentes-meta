@@ -30,6 +30,7 @@ import {
 import { MetaGraphRequestError } from "./services/meta-graph.client";
 import { syncMetaAssetsFromGraph } from "./services/meta-assets.service";
 import { getEffectiveMetaIds } from "../../config/meta-runtime";
+import { buildMetaConsoleConfig } from "./services/meta-console-config.service";
 
 export const metaRouter = Router();
 const metaApi = new MetaApiService();
@@ -154,6 +155,11 @@ metaRouter.get("/production-readiness", requireOperatorAccess, async (req: Authe
 
 metaRouter.get("/oauth/scopes", (_req, res) => {
   res.json({ scopes: getOAuthScopes().split(",") });
+});
+
+/** Checklist de URIs/domínios para colar no App Dashboard Meta (Advanced + Facebook Login). */
+metaRouter.get("/console-settings", requireOperatorAccess, (_req, res) => {
+  res.json(buildMetaConsoleConfig());
 });
 
 metaRouter.post("/oauth/sdk-token", requireOperatorAccess, async (req: AuthenticatedRequest, res) => {

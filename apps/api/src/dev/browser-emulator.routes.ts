@@ -76,7 +76,7 @@ function emulatorHtml(scriptSrc: string): string {
     <h2>Meta (Marketing API + OAuth)</h2>
     <p class="muted">App: Phoenix Marketing Automat · Conecte o token Meta antes de testar campanhas/insights.</p>
     <div class="row">
-      <a id="link-meta-oauth" href="/api/meta/oauth/login" target="_blank" rel="noopener"><button type="button">Conectar Meta (OAuth)</button></a>
+      <button type="button" id="btn-meta-oauth">Conectar Meta (OAuth servidor)</button>
       <button type="button" id="btn-meta-status">GET /api/meta/status</button>
       <button type="button" id="btn-meta-readiness">GET /api/meta/production-readiness</button>
       <button type="button" id="btn-meta-me">GET /api/meta/me</button>
@@ -190,6 +190,17 @@ const EMULATOR_JS = `
   $("btn-approvals").addEventListener("click", () => getJson("/api/approvals", "out-api"));
 
   $("btn-products").addEventListener("click", () => getJson("/api/products", "out-api"));
+
+  $("btn-meta-oauth").addEventListener("click", async () => {
+    const res = await fetch("/api/meta/oauth/login-url", { headers: headersJson() });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body && body.url) {
+      window.open(body.url, "_blank", "noopener");
+      out("out-meta", { status: res.status, body: { opened: body.url } });
+      return;
+    }
+    out("out-meta", { status: res.status, body, hint: "Faça login JWT ou defina x-api-key antes do OAuth." });
+  });
 
   $("btn-meta-status").addEventListener("click", () => getJson("/api/meta/status", "out-meta"));
   $("btn-meta-readiness").addEventListener("click", () => getJson("/api/meta/production-readiness", "out-meta"));

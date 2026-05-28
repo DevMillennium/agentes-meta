@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { META_OAUTH_SCOPES } from "../../../config/meta-oauth-scopes";
 import { env, getMetaRedirectUri, isMetaOAuthConfigured } from "../../../config/env";
 import {
   saveUserMetaToken,
@@ -6,20 +7,7 @@ import {
 } from "../../../config/meta-token.service";
 import { getMetaGraphPublicJson, MetaGraphRequestError } from "./meta-graph.client";
 
-const OAUTH_SCOPES = [
-  "ads_management",
-  "ads_read",
-  "business_management",
-  "pages_manage_metadata",
-  "pages_show_list",
-  "pages_read_engagement",
-  "whatsapp_business_management",
-  "whatsapp_business_messaging",
-  "instagram_basic",
-  "instagram_manage_messages",
-  "pages_manage_posts",
-  "instagram_content_publish"
-].join(",");
+const OAUTH_SCOPES = META_OAUTH_SCOPES;
 
 const STATE_PURPOSE = "meta_oauth";
 
