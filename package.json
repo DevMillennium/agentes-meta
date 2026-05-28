@@ -21,6 +21,8 @@
     "db:down": "docker compose down",
     "emulate": "bash scripts/emulate.sh",
     "emulate:ci": "EMULATE_NO_WAIT=1 bash scripts/emulate.sh",
+    "meta:bootstrap": "bash scripts/meta-bootstrap.sh",
+    "meta:bootstrap:prod": "bash scripts/meta-bootstrap-prod.sh",
     "bootstrap": "bash scripts/bootstrap-full.sh",
     "seed:products": "curl -sf -X POST http://localhost:4000/api/products/seed/default -H \"x-api-key: phoenix-local-api-key-16\"",
     "postinstall": "prisma generate",

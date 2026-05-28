@@ -330,6 +330,44 @@ export class MetaApiService {
     }
   }
 
+  public async subscribeWhatsAppWebhooks(): Promise<MetaApiResult<Record<string, unknown>>> {
+    if (!this.hasAccessToken()) {
+      return {
+        ok: false,
+        mode: "placeholder",
+        provider: "whatsapp-cloud-webhooks",
+        note: "Token ausente."
+      };
+    }
+
+    const wabaId = this.metaIds().whatsappBusinessAccountId?.trim();
+    if (!wabaId) {
+      return {
+        ok: false,
+        mode: "graph",
+        provider: "whatsapp-cloud-webhooks",
+        error: "WHATSAPP_BUSINESS_ACCOUNT_ID ausente. Rode POST /api/meta/sync-assets."
+      };
+    }
+
+    try {
+      const data = await postMetaGraphJson<Record<string, unknown>>(
+        `${this.baseUrl}/${encodeURIComponent(wabaId)}/subscribed_apps`,
+        {
+          subscribed_fields: "messages,message_template_status_update,message_template_quality_update"
+        }
+      );
+      return {
+        ok: true,
+        mode: "graph",
+        provider: "whatsapp-cloud-webhooks",
+        data
+      };
+    } catch (error) {
+      return this.toErrorResult<Record<string, unknown>>("whatsapp-cloud-webhooks", error);
+    }
+  }
+
   /** Compatibilidade — delega para `createCampaign`. */
   public async createCampaignPlaceholder(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
     const adAccountId = String(payload.adAccountId ?? env.META_AD_ACCOUNT_ID ?? "");

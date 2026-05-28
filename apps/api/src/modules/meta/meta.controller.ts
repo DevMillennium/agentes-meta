@@ -103,6 +103,12 @@ function buildMetaProductionReadiness(userHasStoredToken: boolean) {
   };
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof MetaGraphRequestError) return error.message;
+  if (error instanceof Error) return error.message;
+  return "Erro desconhecido";
+}
+
 metaRouter.get("/session", requireAuth, async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.userId;
   const stored = userId ? await loadUserMetaToken(userId) : null;
@@ -318,14 +324,103 @@ metaRouter.post("/campaigns", requireOperatorAccess, async (req, res) => {
 metaRouter.post("/sync-assets", requireOperatorAccess, async (_req, res) => {
   try {
     const assets = await syncMetaAssetsFromGraph();
-    const subscription = await metaApi.subscribeInstagramWebhooks();
-    res.json({ ok: true, assets, subscription });
+    const subscriptions = {
+      instagram: await metaApi.subscribeInstagramWebhooks(),
+      whatsapp: await metaApi.subscribeWhatsAppWebhooks()
+    };
+    res.json({ ok: true, assets, subscriptions });
   } catch (error) {
     res.status(502).json({
       ok: false,
       error: error instanceof Error ? error.message : "Falha ao sincronizar ativos Meta."
     });
   }
+});
+
+metaRouter.post("/bootstrap", requireOperatorAccess, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.userId;
+  const stored = userId ? await loadUserMetaToken(userId) : null;
+  const readinessBefore = buildMetaProductionReadiness(Boolean(stored));
+  const steps: Record<string, unknown> = {};
+
+  if (!readinessBefore.checks.oauthConfigured) {
+    res.status(400).json({
+      ok: false,
+      message: "META_APP_ID/META_APP_SECRET não configurados. Corrija o ambiente e execute novamente.",
+      readinessBefore,
+      steps
+    });
+    return;
+  }
+
+  const accessToken = getMetaAccessToken();
+  if (!accessToken) {
+    let oauthLoginUrl: string | null = null;
+    try {
+      if (userId) {
+        oauthLoginUrl = buildOAuthLoginUrl(createOAuthState(userId));
+      }
+    } catch {
+      oauthLoginUrl = null;
+    }
+    res.status(409).json({
+      ok: false,
+      message: "Token Meta ausente. Conecte via OAuth e rode novamente.",
+      oauthLoginUrl,
+      readinessBefore,
+      steps
+    });
+    return;
+  }
+
+  try {
+    steps.tokenDebug = await debugToken(accessToken);
+  } catch (error) {
+    steps.tokenDebugError = getErrorMessage(error);
+  }
+
+  let assets: Record<string, unknown> | undefined;
+  try {
+    assets = (await syncMetaAssetsFromGraph()) as Record<string, unknown>;
+    steps.syncAssets = { ok: true, assets };
+  } catch (error) {
+    steps.syncAssets = { ok: false, error: getErrorMessage(error) };
+  }
+
+  try {
+    steps.subscribeInstagram = await metaApi.subscribeInstagramWebhooks();
+  } catch (error) {
+    steps.subscribeInstagram = { ok: false, error: getErrorMessage(error) };
+  }
+
+  try {
+    steps.subscribeWhatsApp = await metaApi.subscribeWhatsAppWebhooks();
+  } catch (error) {
+    steps.subscribeWhatsApp = { ok: false, error: getErrorMessage(error) };
+  }
+
+  try {
+    steps.me = await metaApi.getMe();
+  } catch (error) {
+    steps.me = { ok: false, error: getErrorMessage(error) };
+  }
+
+  try {
+    steps.adAccounts = await metaApi.listAdAccounts();
+  } catch (error) {
+    steps.adAccounts = { ok: false, error: getErrorMessage(error) };
+  }
+
+  const readinessAfter = buildMetaProductionReadiness(Boolean(stored || accessToken));
+  res.json({
+    ok: readinessAfter.ok,
+    message: readinessAfter.ok
+      ? "Bootstrap Meta concluído com sucesso."
+      : "Bootstrap executado com pendências (veja missing/readinessAfter).",
+    readinessBefore,
+    readinessAfter,
+    steps
+  });
 });
 
 metaRouter.post("/publish-instagram", requireOperatorAccess, async (req, res) => {

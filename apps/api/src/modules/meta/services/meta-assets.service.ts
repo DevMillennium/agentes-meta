@@ -58,19 +58,31 @@ export async function syncMetaAssetsFromGraph(): Promise<MetaAssetsConfig> {
   }
 
   try {
-    const waba = await getMetaGraphJson<GraphList<{ id: string }>>(
-      `${base}/me/businesses`,
-      { fields: "id", limit: 1 }
-    );
-    const businessId = waba.data?.[0]?.id;
-    if (businessId) {
-      result.whatsappBusinessAccountId = businessId;
-      const phones = await getMetaGraphJson<GraphList<{ id: string; display_phone_number?: string }>>(
-        `${base}/${businessId}/phone_numbers`,
-        { fields: "id,display_phone_number", limit: 5 }
-      );
-      if (phones.data?.[0]?.id) {
-        result.whatsappPhoneNumberId = phones.data[0].id;
+    const businesses = await getMetaGraphJson<GraphList<{ id: string }>>(`${base}/me/businesses`, {
+      fields: "id",
+      limit: 5
+    });
+    for (const business of businesses.data ?? []) {
+      const businessId = business.id;
+      if (!businessId) continue;
+      try {
+        const wabas = await getMetaGraphJson<GraphList<{ id: string }>>(
+          `${base}/${businessId}/owned_whatsapp_business_accounts`,
+          { fields: "id,name", limit: 5 }
+        );
+        const wabaId = wabas.data?.[0]?.id;
+        if (!wabaId) continue;
+        result.whatsappBusinessAccountId = wabaId;
+        const phones = await getMetaGraphJson<GraphList<{ id: string; display_phone_number?: string }>>(
+          `${base}/${wabaId}/phone_numbers`,
+          { fields: "id,display_phone_number", limit: 5 }
+        );
+        if (phones.data?.[0]?.id) {
+          result.whatsappPhoneNumberId = phones.data[0].id;
+        }
+        break;
+      } catch {
+        // pode não ter permissão para esse business específico
       }
     }
   } catch {

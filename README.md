@@ -150,6 +150,25 @@ Para facilitar a subida do backend em producao com Meta:
    - Redirect URI: `https://SEU_DOMINIO_API/api/meta/oauth/callback`
    - Webhooks: `https://SEU_DOMINIO_API/webhooks/whatsapp` e `https://SEU_DOMINIO_API/webhooks/instagram`
 
+### Automacao para dev (backend-only)
+
+Comando unico para executar o bootstrap automatico da Meta (debug token, sync de assets,
+inscricao de webhooks IG/WhatsApp e validacao de conectividade):
+
+```bash
+API_KEY="SUA_API_KEY" API_BASE_URL="http://localhost:4000" npm run meta:bootstrap
+```
+
+Em producao:
+
+```bash
+API_KEY="SUA_API_KEY_PROD" API_BASE_URL="https://phoenix-marketing-api.vercel.app" npm run meta:bootstrap:prod
+```
+
+Endpoints de apoio:
+- `POST /api/meta/bootstrap`
+- `GET /api/meta/production-readiness`
+
 ## Observacoes de seguranca
 
 - Orcamento nao deve ser alterado sem aprovacao.
