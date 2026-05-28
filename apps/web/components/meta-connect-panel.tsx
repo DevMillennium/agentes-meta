@@ -21,6 +21,17 @@ export function MetaConnectPanel() {
   const [message, setMessage] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
+  const openOAuthServerLogin = useCallback(async () => {
+    const res = await fetch(`${API_BASE_URL}/api/meta/oauth/login-url`, {
+      headers: getAuthHeaders()
+    });
+    const body = (await res.json()) as { url?: string; error?: string };
+    if (!res.ok || !body.url) {
+      throw new Error(body.error ?? "Não foi possível iniciar OAuth.");
+    }
+    window.open(body.url, "_blank", "noopener,noreferrer");
+  }, []);
+
   const refreshApiStatus = useCallback(async () => {
     const res = await fetch(`${API_BASE_URL}/api/meta/status`, { headers: getAuthHeaders() });
     if (res.ok) {
@@ -81,7 +92,14 @@ export function MetaConnectPanel() {
 
       setMessage("Login não concluído. Autorize o app Phoenix Marketing Automat no Facebook.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Erro ao conectar.");
+      const msg = error instanceof Error ? error.message : "Erro ao conectar.";
+      if (/JSSDK|Javascript|SDK/i.test(msg)) {
+        setMessage(
+          "JSSDK não habilitado no app Meta. Use o botão 'OAuth servidor (recomendado)' para concluir a conexão."
+        );
+      } else {
+        setMessage(msg);
+      }
     } finally {
       setBusy(false);
     }
@@ -122,7 +140,7 @@ export function MetaConnectPanel() {
     <div className="meta-panel">
       <h3>Phoenix Global Market Automat</h3>
       <p className="muted">
-        App <strong>Phoenix Marketing Automat</strong> · SDK JavaScript + API v25.0
+        App <strong>Phoenix Marketing Automat</strong> · OAuth servidor recomendado (independe de JSSDK)
       </p>
 
       <dl className="meta-dl">
@@ -137,6 +155,21 @@ export function MetaConnectPanel() {
       </dl>
 
       <div className="meta-actions">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            setMessage("");
+            void openOAuthServerLogin()
+              .catch((error) => {
+                setMessage(error instanceof Error ? error.message : "Erro OAuth.");
+              })
+              .finally(() => setBusy(false));
+          }}
+        >
+          OAuth servidor (recomendado)
+        </button>
         <button
           type="button"
           className="secondary"
@@ -159,37 +192,13 @@ export function MetaConnectPanel() {
           Sincronizar ativos Meta
         </button>
         <button type="button" disabled={!isReady || busy} onClick={() => void handleConnect()}>
-          Conectar com Facebook
+          Conectar com Facebook (JSSDK)
         </button>
         <button type="button" disabled={!isReady || busy} onClick={() => void handleCheckStatus()}>
           Verificar login (FB.getLoginStatus)
         </button>
         <button type="button" className="secondary" disabled={!isReady || busy} onClick={() => void handleLogout()}>
           Logout Facebook
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              const res = await fetch(`${API_BASE_URL}/api/meta/oauth/login-url`, {
-                headers: getAuthHeaders()
-              });
-              const body = (await res.json()) as { url?: string; error?: string };
-              if (!res.ok || !body.url) {
-                throw new Error(body.error ?? "Não foi possível iniciar OAuth.");
-              }
-              window.open(body.url, "_blank", "noopener,noreferrer");
-            } catch (error) {
-              setMessage(error instanceof Error ? error.message : "Erro OAuth.");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          OAuth servidor (sua conta)
         </button>
       </div>
 
