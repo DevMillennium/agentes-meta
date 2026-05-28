@@ -87,4 +87,12 @@ sync_project api "$ROOT"
 sync_project web "$ROOT/apps/web"
 
 echo ""
+if vercel env pull "$ROOT/.env.vercel.production" --environment=production --yes >/dev/null 2>&1; then
+  if grep -q 'localhost' "$ROOT/.env.vercel.production" 2>/dev/null && grep '^DATABASE_URL=' "$ROOT/.env.vercel.production" | grep -q localhost; then
+    echo "⚠️  CRÍTICO: DATABASE_URL em production ainda é localhost."
+    echo "   Login/OAuth multi-usuário na Vercel não funcionará até configurar Postgres na nuvem."
+    echo "   Workaround: OAuth local (npm run meta:oauth:auto) → npm run meta:push-token:vercel"
+    echo "   Painel: https://vercel.com → projeto phoenix-marketing-api → Settings → Environment Variables"
+  fi
+fi
 echo "Concluído. Rode um redeploy na Vercel se necessário."

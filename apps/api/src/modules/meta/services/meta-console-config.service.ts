@@ -57,7 +57,11 @@ export function buildMetaConsoleConfig(extra?: {
     ...(extra?.prodWebUrls ?? DEFAULT_PROD_WEB_URLS)
   ]);
 
-  const redirectUris = buildRedirectUris(prodApiUrls);
+  const localDevApiUrls = ["http://localhost:4000", "http://127.0.0.1:4000"];
+  const redirectUris = uniqueStrings([
+    ...buildRedirectUris(prodApiUrls),
+    ...buildRedirectUris(localDevApiUrls)
+  ]);
   /** Apenas hostnames — NÃO coloque paths OAuth aqui (erro comum no Basic Settings). */
   const appDomains = uniqueStrings([
     "localhost",
@@ -84,18 +88,21 @@ export function buildMetaConsoleConfig(extra?: {
     oauthScopesCsv: META_OAUTH_SCOPES,
     redirectUriPrimary: getMetaRedirectUri(),
     facebookDevelopers: {
-      basic: `https://developers.facebook.com/apps/${META_APP_ID}/settings/basic/?business_id=${META_BUSINESS_ID}`,
-      advanced: `https://developers.facebook.com/apps/${META_APP_ID}/settings/advanced/?business_id=${META_BUSINESS_ID}`,
-      facebookLogin: `https://developers.facebook.com/apps/${META_APP_ID}/fb-login/settings/?business_id=${META_BUSINESS_ID}`,
-      webhooks: `https://developers.facebook.com/apps/${META_APP_ID}/webhooks/?business_id=${META_BUSINESS_ID}`
+      basic: `https://developers.facebook.com/apps/${env.META_APP_ID?.trim() || META_APP_ID}/settings/basic/?business_id=${META_BUSINESS_ID}`,
+      advanced: `https://developers.facebook.com/apps/${env.META_APP_ID?.trim() || META_APP_ID}/settings/advanced/?business_id=${META_BUSINESS_ID}`,
+      facebookLogin: `https://developers.facebook.com/apps/${env.META_APP_ID?.trim() || META_APP_ID}/fb-login/settings/?business_id=${META_BUSINESS_ID}`,
+      webhooks: `https://developers.facebook.com/apps/${env.META_APP_ID?.trim() || META_APP_ID}/webhooks/?business_id=${META_BUSINESS_ID}`
     },
     facebookLoginSettings: {
+      /** Obrigatório: App Type = Web em Configurações → Avançado (não Native/Desktop). */
+      appTypeRequired: "Web",
       clientOAuthLogin: true,
       webOAuthLogin: true,
       enforceHttps: true,
+      embeddedBrowserOAuthLogin: false,
       validOAuthRedirectUris: redirectUris,
       allowedDomainsForJavaScriptSdk: jsSdkHosts,
-      loginFromDevices: true
+      loginFromDevices: false
     },
     appSettings: {
       appDomains,
@@ -123,6 +130,9 @@ export function buildMetaConsoleConfig(extra?: {
       NEXT_PUBLIC_API_URL: apiPublic
     },
     checklist: [
+      "CRÍTICO — Configurações → Avançado → Tipo de app: WEB (não Native/Desktop). Erro 'configured as a desktop app' = tipo errado.",
+      "CRÍTICO — Produtos → Facebook Login → Configurações: ativar 'Login do OAuth na Web'; desativar fluxo só desktop se não usar app nativo.",
+      "Configurações BÁSICAS → Adicionar plataforma 'Site' com URL do dashboard (não só Desktop).",
       "Configurações BÁSICAS → Domínios do app: SOMENTE hostnames (ex: localhost, phoenix-marketing-api.vercel.app). NÃO cole URLs com http:// ou /api/...",
       `Configurações BÁSICAS → URL do site: ${webApp || "http://localhost:3000"} (página inicial do dashboard, NÃO o callback OAuth)`,
       `Facebook Login → URIs de redirecionamento OAuth válidos (uma por linha): ${redirectUris.join(" | ")}`,

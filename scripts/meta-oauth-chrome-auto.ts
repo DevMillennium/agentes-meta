@@ -146,7 +146,9 @@ async function waitForOAuthCompletion(): Promise<void> {
   }
 
   throw new Error(
-    `Timeout (${OAUTH_TIMEOUT_MS / 1000}s) aguardando token. Conclua o OAuth na aba do Chrome.`
+    `Timeout (${OAUTH_TIMEOUT_MS / 1000}s) aguardando token.\n` +
+      `No Chrome: abra a aba do Facebook e clique Continuar/Permitir.\n` +
+      `Se aparecer "URL bloqueada", rode: npm run meta:fix-oauth-redirect e salve as URIs no Meta Console.`
   );
 }
 

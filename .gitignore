@@ -21,3 +21,4 @@ yarn.lock
 agents/logs/actions/*.log
 agents/logs/errors/*.log
 agents/logs/screenshots/*.png
+.env*.local

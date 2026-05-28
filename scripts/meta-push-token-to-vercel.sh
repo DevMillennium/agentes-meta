@@ -3,16 +3,18 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TOKEN_FILE="$ROOT/.meta-token.local.json"
-
-if [[ ! -f "$TOKEN_FILE" ]]; then
-  echo "Token não encontrado. Rode primeiro: npm run meta:oauth:auto"
-  exit 1
+TOKEN=""
+if [[ -f "$ROOT/.meta-token.local.json" ]]; then
+  TOKEN="$(python3 -c "import json; print(json.load(open('$ROOT/.meta-token.local.json')).get('accessToken',''))" 2>/dev/null || true)"
 fi
-
-TOKEN="$(python3 -c "import json; print(json.load(open('$TOKEN_FILE'))['accessToken'])")"
 if [[ -z "$TOKEN" ]]; then
-  echo "accessToken vazio em $TOKEN_FILE"
+  TOKEN="$(npx tsx "$ROOT/scripts/meta-export-token.ts" 2>/dev/null || true)"
+fi
+if [[ -z "$TOKEN" ]]; then
+  echo "Token Meta não encontrado (arquivo nem Postgres)."
+  echo "1) Salve URIs no Meta Console: npm run meta:fix-oauth-redirect"
+  echo "2) Conclua OAuth no Chrome: npm run meta:oauth:auto"
+  echo "   (no Chrome: Continuar / Permitir na aba do Facebook)"
   exit 1
 fi
 
