@@ -29,9 +29,7 @@ echo "[2/4] Abrindo Meta Console e copiando URIs (local + cloud)…"
 bash scripts/meta-fix-oauth-redirect.sh
 
 echo "[3/4] OAuth automático na API de nuvem (Chrome autenticado)…"
-export API_PUBLIC_URL="$PHOENIX_CLOUD_API_URL"
-export WEB_APP_URL="$PHOENIX_CLOUD_WEB_URL"
-npm run meta:oauth:auto
+PHOENIX_TARGET=cloud PHOENIX_CLOUD_API_URL="$PHOENIX_CLOUD_API_URL" PHOENIX_CLOUD_WEB_URL="$PHOENIX_CLOUD_WEB_URL" npm run meta:oauth:auto
 
 echo "[4/4] Bootstrap Meta em produção…"
 API_KEY="${ADMIN_API_KEY:-}" API_BASE_URL="$PHOENIX_CLOUD_API_URL" npm run meta:bootstrap:prod || true

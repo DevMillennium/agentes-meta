@@ -20,12 +20,19 @@ loadEnv({ path: path.join(repoRoot, ".env") });
 loadEnv({ path: path.join(repoRoot, ".env.cloud") });
 
 const isCloud = process.env.PHOENIX_TARGET === "cloud";
+const CLOUD_API_DEFAULT = "https://phoenix-marketing-api.vercel.app";
+const CLOUD_WEB_DEFAULT =
+  "https://phoenix-marketing-web-millenniumomnichannel-4893s-projects.vercel.app";
+/** Em cloud, ignora API_PUBLIC_URL do .env local para não misturar com localhost. */
 const API_URL = (
   isCloud
-    ? process.env.PHOENIX_CLOUD_API_URL ??
-      process.env.API_PUBLIC_URL ??
-      "https://phoenix-marketing-api.vercel.app"
+    ? process.env.PHOENIX_CLOUD_API_URL ?? CLOUD_API_DEFAULT
     : process.env.API_PUBLIC_URL ?? "http://localhost:4000"
+).replace(/\/$/, "");
+const WEB_URL = (
+  isCloud
+    ? process.env.PHOENIX_CLOUD_WEB_URL ?? CLOUD_WEB_DEFAULT
+    : process.env.WEB_APP_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");
 const API_KEY = process.env.ADMIN_API_KEY?.trim() ?? "";
 let bearerJwt: string | null = null;
