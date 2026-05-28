@@ -27,9 +27,19 @@ function hostFromUrl(url: string): string | null {
 }
 
 function buildRedirectUris(apiBaseUrls: string[]): string[] {
-  return uniqueStrings(
-    apiBaseUrls.flatMap((base) => `${base.replace(/\/$/, "")}/api/meta/oauth/callback`)
+  const primary = apiBaseUrls.map(
+    (base) => `${base.replace(/\/$/, "")}/api/meta/oauth/callback`
   );
+  const withLocalhostAlias = primary.flatMap((uri) => {
+    if (uri.includes("://localhost")) {
+      return [uri, uri.replace("://localhost", "://127.0.0.1")];
+    }
+    if (uri.includes("://127.0.0.1")) {
+      return [uri, uri.replace("://127.0.0.1", "://localhost")];
+    }
+    return [uri];
+  });
+  return uniqueStrings(withLocalhostAlias);
 }
 
 export function buildMetaConsoleConfig(extra?: {
@@ -48,8 +58,11 @@ export function buildMetaConsoleConfig(extra?: {
   ]);
 
   const redirectUris = buildRedirectUris(prodApiUrls);
+  /** Apenas hostnames — NÃO coloque paths OAuth aqui (erro comum no Basic Settings). */
   const appDomains = uniqueStrings([
     "localhost",
+    "phoenixglobal.com.br",
+    "phoenixglobalholding.com",
     ...prodWebUrls.map(hostFromUrl).filter((h): h is string => Boolean(h)),
     ...prodApiUrls.map(hostFromUrl).filter((h): h is string => Boolean(h))
   ]);
@@ -110,9 +123,11 @@ export function buildMetaConsoleConfig(extra?: {
       NEXT_PUBLIC_API_URL: apiPublic
     },
     checklist: [
-      `Facebook Login → URIs de redirecionamento: ${redirectUris.join(", ")}`,
+      "Configurações BÁSICAS → Domínios do app: SOMENTE hostnames (ex: localhost, phoenix-marketing-api.vercel.app). NÃO cole URLs com http:// ou /api/...",
+      `Configurações BÁSICAS → URL do site: ${webApp || "http://localhost:3000"} (página inicial do dashboard, NÃO o callback OAuth)`,
+      `Facebook Login → URIs de redirecionamento OAuth válidos (uma por linha): ${redirectUris.join(" | ")}`,
       `Facebook Login → Domínios permitidos do SDK JS: ${jsSdkHosts.join(", ")}`,
-      `Configurações básicas → Domínios do app: ${appDomains.join(", ")}`,
+      "Remova do Domínios do app qualquer URL com /api/meta/... — isso gera erro de validação vermelho",
       `Webhooks → Verify token = ${verifyToken || "(defina META_WEBHOOK_VERIFY_TOKEN)"}`,
       `Webhooks → Callback WhatsApp: ${webhookBase}/webhooks/whatsapp`,
       `Webhooks → Callback Instagram: ${webhookBase}/webhooks/instagram`,

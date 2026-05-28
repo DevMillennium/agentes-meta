@@ -7,6 +7,7 @@ build
 .env.local
 .env.vercel*
 .env.source*
+.env.cloud
 .meta-token.local.json
 .meta-assets.local.json
 .DS_Store

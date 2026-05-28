@@ -78,7 +78,5 @@ open -a "${CHROME_APP}" "${API_PUBLIC_URL}/console"
 open -a "${CHROME_APP}" "${API_PUBLIC_URL}/dev/emulator"
 
 echo ""
-echo "Próximo passo manual no Chrome (Facebook Login):"
-echo "  • URIs OAuth: ${API_PUBLIC_URL}/api/meta/oauth/callback"
-echo "  • Domínios SDK JS: localhost e host do WEB_APP_URL"
-echo "  • Depois: login em ${WEB_APP_URL} → Configurações Meta → OAuth servidor"
+echo "Executando OAuth automático no Chrome (Playwright)…"
+npm run meta:oauth:auto
