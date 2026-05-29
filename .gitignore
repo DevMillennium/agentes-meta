@@ -8,6 +8,8 @@ build
 .env.vercel*
 .env.source*
 .env.cloud
+.env.chatwoot
+.tmp/
 .meta-token.local.json
 .meta-assets.local.json
 .DS_Store

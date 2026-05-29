@@ -1,0 +1,196 @@
+/* Phoenix Digital Agents Omnichannel — identidade visual (login) */
+
+:root {
+  --phoenix-gold: #c9a227;
+  --phoenix-gold-mid: #b8860b;
+  --phoenix-gold-dark: #8b6914;
+  --phoenix-gold-light: #e8d5a3;
+  --phoenix-gold-glow: rgba(201, 162, 39, 0.22);
+  --phoenix-charcoal: #1c1917;
+  --phoenix-charcoal-soft: #44403c;
+  --phoenix-warm-50: #faf7f2;
+  --phoenix-warm-100: #f5efe6;
+  --phoenix-warm-200: #ede4d4;
+  --phoenix-warm-300: #dcc9a8;
+  --phoenix-card: rgba(255, 252, 247, 0.96);
+}
+
+/* ── Fundo + marca d'água ── */
+main.flex.min-h-screen,
+.flex.min-h-screen.flex-col {
+  position: relative !important;
+  background: linear-gradient(
+    168deg,
+    var(--phoenix-warm-50) 0%,
+    var(--phoenix-warm-100) 38%,
+    #f0e8dc 72%,
+    var(--phoenix-warm-50) 100%
+  ) !important;
+  color: var(--phoenix-charcoal) !important;
+}
+
+main.flex.min-h-screen::before,
+.flex.min-h-screen.flex-col::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/brand-assets/logo.png") center 6% / min(720px, 96vw) auto
+    no-repeat;
+  opacity: 0.09;
+  pointer-events: none;
+  z-index: 0;
+}
+
+main.flex.min-h-screen::after,
+.flex.min-h-screen.flex-col::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 18%,
+    var(--phoenix-gold-glow) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+main.flex.min-h-screen > *,
+.flex.min-h-screen.flex-col > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Logo (sem duplicata) ── */
+section.max-w-5xl.mx-auto > img {
+  display: none !important;
+}
+
+section.max-w-5xl.mx-auto {
+  position: relative !important;
+  width: min(640px, 94vw) !important;
+  padding-top: clamp(210px, 36vh, 340px) !important;
+  padding-bottom: 0.25rem !important;
+}
+
+section.max-w-5xl.mx-auto::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 94vw);
+  height: clamp(200px, 34vh, 320px);
+  background: url("/brand-assets/logo.png") center top / contain no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Título ── */
+section.max-w-5xl.mx-auto > h2 {
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 0.75rem !important;
+  color: var(--phoenix-charcoal) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}
+
+section.max-w-5xl.mx-auto > p {
+  position: relative !important;
+  z-index: 1 !important;
+  color: var(--phoenix-charcoal-soft) !important;
+}
+
+/* ── Card de login ── */
+main.flex.min-h-screen section.bg-white.shadow,
+main.flex.min-h-screen section.sm\\:max-w-lg.bg-white {
+  background: var(--phoenix-card) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--phoenix-warm-200) !important;
+  box-shadow:
+    0 16px 48px var(--phoenix-gold-glow),
+    0 4px 16px rgba(28, 25, 23, 0.06) !important;
+  z-index: 2 !important;
+}
+
+/* Labels dos campos */
+main.flex.min-h-screen label,
+main.flex.min-h-screen .text-n-slate-12 {
+  color: var(--phoenix-charcoal) !important;
+}
+
+/* Inputs */
+main.flex.min-h-screen input[type="text"],
+main.flex.min-h-screen input[type="email"],
+main.flex.min-h-screen input[type="password"] {
+  background: var(--phoenix-warm-50) !important;
+  border-color: var(--phoenix-warm-300) !important;
+  color: var(--phoenix-charcoal) !important;
+}
+
+main.flex.min-h-screen input::placeholder {
+  color: #a8a29e !important;
+}
+
+main.flex.min-h-screen input:focus,
+main.flex.min-h-screen input:focus-visible {
+  border-color: var(--phoenix-gold-mid) !important;
+  box-shadow: 0 0 0 3px var(--phoenix-gold-glow) !important;
+  outline: none !important;
+}
+
+/* Links (esqueci senha, cadastro) */
+main.flex.min-h-screen a.text-link,
+main.flex.min-h-screen .text-link,
+main.flex.min-h-screen a[href*="reset"],
+main.flex.min-h-screen a[href*="signup"] {
+  color: var(--phoenix-gold-dark) !important;
+}
+
+main.flex.min-h-screen a.text-link:hover,
+main.flex.min-h-screen .text-link:hover {
+  color: var(--phoenix-gold-mid) !important;
+}
+
+/* Botão Conecte-se */
+main.flex.min-h-screen button[type="submit"],
+main.flex.min-h-screen [data-testid="submit_button"],
+main.flex.min-h-screen .w-full[type="submit"] {
+  background: linear-gradient(
+    135deg,
+    #dbb84a 0%,
+    var(--phoenix-gold) 35%,
+    var(--phoenix-gold-mid) 70%,
+    var(--phoenix-gold-dark) 100%
+  ) !important;
+  border: 1px solid var(--phoenix-gold-dark) !important;
+  color: var(--phoenix-charcoal) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 14px rgba(139, 105, 20, 0.35) !important;
+  transition:
+    filter 0.2s ease,
+    transform 0.15s ease;
+}
+
+main.flex.min-h-screen button[type="submit"]:hover:not(:disabled),
+main.flex.min-h-screen [data-testid="submit_button"]:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+main.flex.min-h-screen button[type="submit"]:disabled {
+  opacity: 0.65 !important;
+}
+
+/* Divisor "OU" */
+main.flex.min-h-screen .uppercase {
+  color: var(--phoenix-charcoal-soft) !important;
+}
+
+/* Sidebar (dashboard) — não alterar login */
+.sidebar .logo img,
+.branding--thumbnail {
+  max-height: 48px !important;
+  background: transparent !important;
+}

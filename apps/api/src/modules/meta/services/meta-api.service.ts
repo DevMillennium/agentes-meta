@@ -291,6 +291,50 @@ export class MetaApiService {
     }
   }
 
+  public async sendMessengerTextMessage(recipientId: string, text: string): Promise<MetaSendResult> {
+    const pageId = this.metaIds().pageId?.trim();
+    if (!getMetaAccessToken() || !pageId) {
+      return {
+        ok: true,
+        mode: "placeholder",
+        provider: "messenger-platform-api",
+        note: "Defina META_ACCESS_TOKEN e META_PAGE_ID para ativar envio real no Messenger.",
+        raw: { recipientId, text }
+      };
+    }
+
+    const url = `${this.baseUrl}/${encodeURIComponent(pageId)}/messages`;
+    const body = {
+      messaging_type: "RESPONSE",
+      recipient: { id: recipientId },
+      message: { text }
+    };
+
+    try {
+      const data = await postMetaGraphJson<Record<string, unknown>>(url, body);
+      const graphMessageId =
+        typeof data.message_id === "string" ? data.message_id : undefined;
+      return { ok: true, mode: "graph", provider: "messenger-platform-api", graphMessageId, raw: data };
+    } catch (error) {
+      if (error instanceof MetaGraphRequestError) {
+        return {
+          ok: false,
+          mode: "graph",
+          provider: "messenger-platform-api",
+          error: error.message,
+          status: error.status,
+          meta: error.payload
+        };
+      }
+      return {
+        ok: false,
+        mode: "graph",
+        provider: "messenger-platform-api",
+        error: error instanceof Error ? error.message : "Erro desconhecido ao enviar Messenger."
+      };
+    }
+  }
+
   public async subscribeInstagramWebhooks(): Promise<MetaApiResult<Record<string, unknown>>> {
     if (!this.hasAccessToken()) {
       return {

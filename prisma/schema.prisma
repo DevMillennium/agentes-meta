@@ -69,48 +69,48 @@ model UserMetaConnection {
 }
 
 model BusinessAccount {
-  id                String   @id @default(cuid())
+  id                String             @id @default(cuid())
   name              String
   timezone          String?
   currency          String?
-  metaBusinessId    String?  @unique
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  metaBusinessId    String?            @unique
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   adAccounts        MetaAdAccount[]
   instagramAccounts InstagramAccount[]
   whatsappNumbers   WhatsAppNumber[]
 }
 
 model MetaAdAccount {
-  id                String   @id @default(cuid())
+  id                String          @id @default(cuid())
   businessAccountId String
   businessAccount   BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
-  accountId         String   @unique
+  accountId         String          @unique
   name              String
   status            String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   campaigns         Campaign[]
 }
 
 model InstagramAccount {
-  id                String   @id @default(cuid())
+  id                String          @id @default(cuid())
   businessAccountId String
   businessAccount   BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
-  instagramId       String   @unique
+  instagramId       String          @unique
   username          String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model WhatsAppNumber {
-  id                 String   @id @default(cuid())
+  id                 String          @id @default(cuid())
   businessAccountId  String
   businessAccount    BusinessAccount @relation(fields: [businessAccountId], references: [id], onDelete: Cascade)
-  phoneNumberId      String   @unique
+  phoneNumberId      String          @unique
   displayPhoneNumber String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
 
 model Product {
@@ -135,19 +135,19 @@ model Product {
 }
 
 model Campaign {
-  id               String         @id @default(cuid())
-  metaAdAccountId  String
-  metaAdAccount    MetaAdAccount  @relation(fields: [metaAdAccountId], references: [id], onDelete: Cascade)
-  name             String
-  objective        String
-  status           CampaignStatus @default(DRAFT)
-  dailyBudget      Decimal?       @db.Decimal(10, 2)
-  lifetimeBudget   Decimal?       @db.Decimal(10, 2)
-  mustApproveBudgetChange Boolean @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  adSets           AdSet[]
-  snapshots        PerformanceSnapshot[]
+  id                      String                @id @default(cuid())
+  metaAdAccountId         String
+  metaAdAccount           MetaAdAccount         @relation(fields: [metaAdAccountId], references: [id], onDelete: Cascade)
+  name                    String
+  objective               String
+  status                  CampaignStatus        @default(DRAFT)
+  dailyBudget             Decimal?              @db.Decimal(10, 2)
+  lifetimeBudget          Decimal?              @db.Decimal(10, 2)
+  mustApproveBudgetChange Boolean               @default(true)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  adSets                  AdSet[]
+  snapshots               PerformanceSnapshot[]
 }
 
 model AdSet {
@@ -163,15 +163,15 @@ model AdSet {
 }
 
 model Ad {
-  id          String         @id @default(cuid())
-  adSetId     String
-  adSet       AdSet          @relation(fields: [adSetId], references: [id], onDelete: Cascade)
-  creativeId  String?
-  creative    Creative?      @relation(fields: [creativeId], references: [id], onDelete: SetNull)
-  name        String
-  status      CampaignStatus @default(DRAFT)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id         String         @id @default(cuid())
+  adSetId    String
+  adSet      AdSet          @relation(fields: [adSetId], references: [id], onDelete: Cascade)
+  creativeId String?
+  creative   Creative?      @relation(fields: [creativeId], references: [id], onDelete: SetNull)
+  name       String
+  status     CampaignStatus @default(DRAFT)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }
 
 model Creative {
@@ -207,43 +207,43 @@ model Lead {
 }
 
 model Conversation {
-  id          String   @id @default(cuid())
-  leadId      String
-  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  channel     String
-  externalId  String?
-  startedAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  messages    Message[]
+  id         String    @id @default(cuid())
+  leadId     String
+  lead       Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel    String
+  externalId String?
+  startedAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  messages   Message[]
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   direction      String
   content        String
-  sentAt         DateTime @default(now())
+  sentAt         DateTime     @default(now())
 }
 
 model PerformanceSnapshot {
-  id                 String   @id @default(cuid())
-  campaignId         String
-  campaign           Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  spend              Decimal  @db.Decimal(10, 2)
-  impressions        Int
-  reach              Int
-  frequency          Decimal  @db.Decimal(10, 2)
-  cpm                Decimal  @db.Decimal(10, 2)
-  ctr                Decimal  @db.Decimal(10, 2)
-  cpc                Decimal  @db.Decimal(10, 2)
-  linkClicks         Int
+  id                   String   @id @default(cuid())
+  campaignId           String
+  campaign             Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  spend                Decimal  @db.Decimal(10, 2)
+  impressions          Int
+  reach                Int
+  frequency            Decimal  @db.Decimal(10, 2)
+  cpm                  Decimal  @db.Decimal(10, 2)
+  ctr                  Decimal  @db.Decimal(10, 2)
+  cpc                  Decimal  @db.Decimal(10, 2)
+  linkClicks           Int
   conversationsStarted Int
-  costPerConversation Decimal  @db.Decimal(10, 2)
-  leads              Int
-  purchases          Int
-  roas               Decimal? @db.Decimal(10, 2)
-  capturedAt         DateTime @default(now())
+  costPerConversation  Decimal  @db.Decimal(10, 2)
+  leads                Int
+  purchases            Int
+  roas                 Decimal? @db.Decimal(10, 2)
+  capturedAt           DateTime @default(now())
 }
 
 model AgentAction {
@@ -293,6 +293,123 @@ model OptimizationRule {
   isActive    Boolean  @default(true)
   condition   Json
   action      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// SaaS multiempresa — base para white-label / Chatrace-like (FASE 9)
+// Não substitui o fluxo single-tenant via .env; prepara evolução por Company.
+// ---------------------------------------------------------------------------
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  timezone  String?  @default("America/Fortaleza")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  metaIntegrations MetaIntegration[]
+  chatwootAccounts ChatwootAccount[]
+  channels         Channel[]
+  botAgents        BotAgent[]
+  routingRules     ConversationRoutingRule[]
+  knowledgeBases   AiKnowledgeBase[]
+}
+
+model MetaIntegration {
+  id                    String   @id @default(cuid())
+  companyId             String
+  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  metaAppId             String?
+  metaPageId            String?
+  instagramBusinessId   String?
+  whatsappPhoneNumberId String?
+  whatsappBusinessId    String?
+  webhookVerifyTokenRef String?
+  accessTokenRef        String?
+  isActive              Boolean  @default(true)
+  metadata              Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([companyId])
+}
+
+model ChatwootAccount {
+  id                String   @id @default(cuid())
+  companyId         String
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  baseUrl           String
+  accountId         String
+  apiAccessTokenRef String?
+  webhookSecretRef  String?
+  isActive          Boolean  @default(true)
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  channels Channel[]
+
+  @@unique([companyId, accountId])
+}
+
+model Channel {
+  id                String           @id @default(cuid())
+  companyId         String
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  chatwootAccountId String?
+  chatwootAccount   ChatwootAccount? @relation(fields: [chatwootAccountId], references: [id], onDelete: SetNull)
+  platform          String
+  chatwootInboxId   String?
+  externalPageId    String?
+  isActive          Boolean          @default(true)
+  metadata          Json?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([companyId, platform])
+}
+
+model BotAgent {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name         String
+  provider     String   @default("auto")
+  model        String?
+  systemPrompt String?
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  config       Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ConversationRoutingRule {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name      String
+  priority  Int      @default(100)
+  condition Json
+  action    Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AiKnowledgeBase {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  sourceType  String   @default("manual")
+  content     Json?
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

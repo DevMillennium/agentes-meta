@@ -31,9 +31,26 @@ const envSchema = z.object({
     .transform((value) => value === "true"),
   OPENAI_API_KEY: z.string().optional().default(""),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
-  AI_PROVIDER: z.enum(["auto", "openai", "ollama"]).default("auto"),
+  AI_PROVIDER: z.enum(["auto", "openai", "ollama", "anthropic"]).default("auto"),
+  ANTHROPIC_API_KEY: z.string().optional().default(""),
+  ANTHROPIC_MODEL: z.string().default("claude-3-5-sonnet-latest"),
   OLLAMA_BASE_URL: z.string().default("http://127.0.0.1:11434"),
   OLLAMA_MODEL: z.string().default("glm-4.7-flash:latest"),
+  // --- Chatwoot (camada omnichannel) ---
+  CHATWOOT_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  CHATWOOT_BASE_URL: z.string().optional().default(""),
+  CHATWOOT_ACCOUNT_ID: z.string().optional().default(""),
+  CHATWOOT_API_ACCESS_TOKEN: z.string().optional().default(""),
+  CHATWOOT_INBOX_ID_INSTAGRAM: z.string().optional().default(""),
+  CHATWOOT_INBOX_ID_FACEBOOK: z.string().optional().default(""),
+  CHATWOOT_INBOX_ID_WHATSAPP: z.string().optional().default(""),
+  CHATWOOT_WEBHOOK_SECRET: z.string().optional().default(""),
+  CHATWOOT_HTTP_TIMEOUT_MS: z.coerce.number().min(1000).max(120000).default(15000),
+  /** Quando definido, webhooks legados Meta são encaminhados para Phoenix Digital Agents. */
+  OMNICHANNEL_API_URL: z.string().optional().default(""),
   META_APP_ID: z.string().optional().default(""),
   META_APP_SECRET: z.string().optional(),
   META_CLIENT_TOKEN: z.string().optional().default(""),
@@ -114,4 +131,36 @@ export function getCurrentMetaUserId(): string | undefined {
 
 export function isMetaOAuthConfigured(): boolean {
   return Boolean(env.META_APP_ID?.trim() && env.META_APP_SECRET?.trim());
+}
+
+/** Indica se há configuração mínima para falar com a API do Chatwoot. */
+export function isChatwootConfigured(): boolean {
+  return Boolean(
+    env.CHATWOOT_ENABLED &&
+      env.CHATWOOT_BASE_URL?.trim() &&
+      env.CHATWOOT_ACCOUNT_ID?.trim() &&
+      env.CHATWOOT_API_ACCESS_TOKEN?.trim()
+  );
+}
+
+export type ChatwootPlatform = "instagram" | "facebook" | "whatsapp";
+
+/** Resolve o inbox do Chatwoot para uma plataforma normalizada. */
+export function getChatwootInboxId(platform: ChatwootPlatform): string | undefined {
+  const map: Record<ChatwootPlatform, string> = {
+    instagram: env.CHATWOOT_INBOX_ID_INSTAGRAM?.trim() ?? "",
+    facebook: env.CHATWOOT_INBOX_ID_FACEBOOK?.trim() ?? "",
+    whatsapp: env.CHATWOOT_INBOX_ID_WHATSAPP?.trim() ?? ""
+  };
+  return map[platform] || undefined;
+}
+
+/** Inverso de getChatwootInboxId: descobre a plataforma a partir do inbox_id. */
+export function getPlatformByInboxId(inboxId: string | number | undefined): ChatwootPlatform | undefined {
+  if (inboxId === undefined || inboxId === null) return undefined;
+  const id = String(inboxId);
+  if (id === env.CHATWOOT_INBOX_ID_INSTAGRAM?.trim()) return "instagram";
+  if (id === env.CHATWOOT_INBOX_ID_FACEBOOK?.trim()) return "facebook";
+  if (id === env.CHATWOOT_INBOX_ID_WHATSAPP?.trim()) return "whatsapp";
+  return undefined;
 }

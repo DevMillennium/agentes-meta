@@ -29,6 +29,9 @@ import { registerBrowserAuthRoutes } from "./shared/browser-auth.routes";
 import { AGENT_CATALOG } from "./modules/agents/services/agent-catalog";
 import { metaRouter } from "./modules/meta/meta.controller";
 import { aiRouter } from "./modules/ai/ai.controller";
+import { registerMetaWebhookRoutes } from "./modules/integration/meta-webhook.controller";
+import { registerChatwootWebhookRoutes } from "./modules/integration/chatwoot-webhook.controller";
+import { bridgeLegacyWebhookToChatwoot } from "./modules/integration/legacy-webhook-bridge.service";
 import { ensureBootstrap, getBootstrapError, isBootstrapped } from "./bootstrap";
 
 export function createApp(): express.Express {
@@ -159,6 +162,10 @@ export function createApp(): express.Express {
     }
     const inboundEvents = parseInboundEvents("whatsapp", event);
     const deliveryStatuses = parseWhatsAppDeliveryStatuses(event);
+    bridgeLegacyWebhookToChatwoot(event as Record<string, unknown>, "whatsapp", {
+      rawBody,
+      signature: req.header("x-hub-signature-256") ?? undefined
+    });
     for (const inboundEvent of inboundEvents) {
       if (env.ENABLE_WORKERS) {
         void enqueueInboundMessageEvent(inboundEvent);
@@ -199,6 +206,10 @@ export function createApp(): express.Express {
       return;
     }
     const inboundEvents = parseInboundEvents("instagram", event);
+    bridgeLegacyWebhookToChatwoot(event as Record<string, unknown>, "instagram", {
+      rawBody,
+      signature: req.header("x-hub-signature-256") ?? undefined
+    });
     for (const inboundEvent of inboundEvents) {
       if (env.ENABLE_WORKERS) {
         void enqueueInboundMessageEvent(inboundEvent);
@@ -211,6 +222,12 @@ export function createApp(): express.Express {
       queuedEvents: inboundEvents.length
     });
   });
+
+  // --- Camada de integração omnichannel (Chatwoot + Meta) ---
+  // Webhook Meta unificado (Instagram + Messenger + WhatsApp) → Chatwoot + IA.
+  registerMetaWebhookRoutes(app);
+  // Webhook do Chatwoot → reenvio ao canal Meta quando atendente humano responde.
+  registerChatwootWebhookRoutes(app);
 
   return app;
 }

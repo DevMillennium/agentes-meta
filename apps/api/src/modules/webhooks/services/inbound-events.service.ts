@@ -1,5 +1,6 @@
 import { LeadTemperature, RiskLevel } from "@prisma/client";
 import { prisma } from "../../../common/prisma";
+import { env } from "../../../config/env";
 import type { InboundMessageEvent } from "./inbound-events.parser";
 import { sendAutomatedReply } from "./auto-reply.service";
 
@@ -98,5 +99,8 @@ export async function processInboundMessageEvent(event: InboundMessageEvent): Pr
     }
   });
 
-  await sendAutomatedReply(event, lead.id, conversation.id);
+  // Com Chatwoot ativo, IA + resposta saem pela ponte omnichannel (evita duplicar).
+  if (!env.CHATWOOT_ENABLED) {
+    await sendAutomatedReply(event, lead.id, conversation.id);
+  }
 }

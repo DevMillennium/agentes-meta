@@ -46,6 +46,12 @@ npx prisma db push
 | `ENABLE_WORKERS` | Não | `false` na Vercel (sem Redis) |
 | `REDIS_URL` | Não | Só se `ENABLE_WORKERS=true` |
 | `META_ACCESS_TOKEN` | Não | Fallback global; cada usuário usa OAuth próprio |
+| `CHATWOOT_ENABLED` | Não | `true` para espelhar conversas no Chatwoot |
+| `CHATWOOT_BASE_URL` | Se enabled | URL pública do Chatwoot self-hosted |
+| `CHATWOOT_ACCOUNT_ID` | Se enabled | ID da conta no Chatwoot |
+| `CHATWOOT_API_ACCESS_TOKEN` | Se enabled | Token Application API |
+| `CHATWOOT_INBOX_ID_*` | Se enabled | IDs dos inboxes por canal |
+| `CHATWOOT_WEBHOOK_SECRET` | Não | Segredo do webhook Chatwoot → API |
 
 ### Vários usuários (`USERS_BOOTSTRAP`)
 
@@ -86,7 +92,10 @@ Use login JWT no web; não exponha chave administrativa no frontend.
 
 1. **Redirect URI:** `https://SEU-API.vercel.app/api/meta/oauth/callback`
 2. **Domínios do app:** `seu-app.vercel.app`
-3. **Webhooks:** `https://SEU-API.vercel.app/webhooks/whatsapp` e `/webhooks/instagram`
+3. **Webhooks Meta (recomendado unificado):** `https://SEU-API.vercel.app/webhooks/meta`
+   - Legado (ainda suportado): `/webhooks/whatsapp` e `/webhooks/instagram`
+4. **Webhook Chatwoot → Phoenix:** `https://SEU-API.vercel.app/webhooks/chatwoot?secret=SEU_SEGREDO`
+   - Chatwoot roda **fora** da Vercel (Docker/VPS). Veja `docs/chatwoot-meta-integration.md`.
 
 ## 5. Deploy via CLI
 
