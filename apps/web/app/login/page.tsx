@@ -2,7 +2,7 @@
 
 import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchApi } from "../../lib/api";
+import { fetchApi, getApiUrl } from "../../lib/api";
 import { setAuthToken, type AuthUser } from "../../lib/auth-client";
 
 interface LoginResponse {
@@ -30,8 +30,17 @@ function LoginForm() {
       });
       setAuthToken(data.accessToken);
       router.replace(next);
-    } catch {
-      setError("E-mail ou senha inválidos.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("401") || msg.includes("Credenciais")) {
+        setError("E-mail ou senha inválidos.");
+      } else if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        setError(
+          `Não foi possível contactar a API (${getApiUrl("")}). Inicie com npm run dev ou verifique NEXT_PUBLIC_API_URL.`
+        );
+      } else {
+        setError(msg || "Falha no login. Verifique a API e tente de novo.");
+      }
     } finally {
       setBusy(false);
     }
@@ -42,6 +51,9 @@ function LoginForm() {
       <form className="card login-card" onSubmit={handleSubmit}>
         <h1>Phoenix Global Market Automat</h1>
         <p className="muted">Entre com sua conta. Cada usuário conecta sua própria conta Meta.</p>
+        <p className="muted login-api-hint">
+          API: <code>{getApiUrl("")}</code>
+        </p>
         <label>
           E-mail
           <input

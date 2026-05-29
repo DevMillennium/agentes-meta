@@ -43,19 +43,19 @@ export async function bootstrapUsers(): Promise<void> {
     }
   }
 
-  const count = await prisma.user.count();
-  if (count === 0) {
-    const passwordHash = await bcrypt.hash(env.ADMIN_PASSWORD, 10);
-    await prisma.user.create({
-      data: {
-        email: env.ADMIN_EMAIL.toLowerCase(),
-        name: "Administrador",
-        role: "admin",
-        passwordHash
-      }
-    });
-    logger.info({ email: env.ADMIN_EMAIL }, "Usuário admin inicial criado.");
-  }
+  const adminEmail = env.ADMIN_EMAIL.toLowerCase();
+  const passwordHash = await bcrypt.hash(env.ADMIN_PASSWORD, 10);
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
+    create: {
+      email: adminEmail,
+      name: "Administrador",
+      role: "admin",
+      passwordHash
+    },
+    update: { passwordHash }
+  });
+  logger.info({ email: admin.email }, "Usuário admin sincronizado com ADMIN_PASSWORD do ambiente.");
 
   bootstrapDone = true;
 }

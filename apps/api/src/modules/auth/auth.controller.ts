@@ -7,6 +7,7 @@ import {
   type AuthenticatedRequest
 } from "../../common/security";
 import { buildPlatformOverview } from "../platform/platform.service";
+import { ensureBootstrap } from "../../bootstrap";
 import { authenticateUser, createUser, listUsers } from "./users.service";
 
 export const authRouter = Router();
@@ -29,6 +30,8 @@ authRouter.post("/login", async (req, res) => {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
+
+  await ensureBootstrap();
 
   const user = await authenticateUser(parsed.data.email, parsed.data.password);
   if (!user) {

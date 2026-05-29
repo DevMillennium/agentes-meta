@@ -409,6 +409,15 @@ code {
   margin: 0;
 }
 
+.login-api-hint {
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.login-api-hint code {
+  font-size: 0.75rem;
+}
+
 .page-header {
   display: flex;
   align-items: flex-start;

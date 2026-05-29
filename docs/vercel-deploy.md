@@ -32,7 +32,7 @@ npx prisma db push
 | `JWT_EXPIRES_IN` | Não | Ex.: `12h` |
 | `ADMIN_API_KEY` | Sim | Chave máquina-a-máquina (≥ 16 chars) |
 | `ADMIN_EMAIL` | Sim | E-mail do admin inicial (se DB vazio) |
-| `ADMIN_PASSWORD` | Sim | Senha do admin inicial (se DB vazio) |
+| `ADMIN_PASSWORD` | Sim | Senha do admin (sincronizada no Neon a cada cold-start do bootstrap) |
 | `USERS_BOOTSTRAP` | Não | JSON com vários usuários (ver abaixo) |
 | `OPENAI_API_KEY` | Sim | Agentes IA |
 | `META_APP_ID` | Sim | App Meta |
