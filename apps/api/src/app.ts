@@ -28,6 +28,7 @@ import { registerBrowserLeadsRoutes } from "./tools/browser-leads.routes";
 import { registerBrowserAuthRoutes } from "./shared/browser-auth.routes";
 import { AGENT_CATALOG } from "./modules/agents/services/agent-catalog";
 import { metaRouter } from "./modules/meta/meta.controller";
+import { aiRouter } from "./modules/ai/ai.controller";
 import { ensureBootstrap, getBootstrapError, isBootstrapped } from "./bootstrap";
 
 export function createApp(): express.Express {
@@ -121,6 +122,7 @@ export function createApp(): express.Express {
     res.json({ items: AGENT_CATALOG, total: AGENT_CATALOG.length, public: true });
   });
 
+  app.use("/api/ai", requireOperatorAccess, aiRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/platform", platformRouter);
   app.use("/api/meta", metaRouter);

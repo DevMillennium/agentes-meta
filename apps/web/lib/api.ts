@@ -14,7 +14,15 @@ export async function fetchApi<T>(
 
   const res = await fetch(getApiUrl(path), { ...options, headers, cache: "no-store" });
   if (!res.ok) {
-    throw new Error(`API ${res.status}: ${path}`);
+    let detail = "";
+    try {
+      const body = (await res.json()) as { error?: unknown; message?: string };
+      if (typeof body.message === "string") detail = body.message;
+      else if (body.error) detail = JSON.stringify(body.error);
+    } catch {
+      /* ignore */
+    }
+    throw new Error(detail ? `${res.status}: ${detail}` : `API ${res.status}: ${path}`);
   }
   return res.json() as Promise<T>;
 }

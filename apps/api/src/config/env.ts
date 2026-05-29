@@ -30,6 +30,10 @@ const envSchema = z.object({
     .default("false")
     .transform((value) => value === "true"),
   OPENAI_API_KEY: z.string().optional().default(""),
+  OPENAI_MODEL: z.string().default("gpt-4o-mini"),
+  AI_PROVIDER: z.enum(["auto", "openai", "ollama"]).default("auto"),
+  OLLAMA_BASE_URL: z.string().default("http://127.0.0.1:11434"),
+  OLLAMA_MODEL: z.string().default("glm-4.7-flash:latest"),
   META_APP_ID: z.string().optional().default(""),
   META_APP_SECRET: z.string().optional(),
   META_CLIENT_TOKEN: z.string().optional().default(""),

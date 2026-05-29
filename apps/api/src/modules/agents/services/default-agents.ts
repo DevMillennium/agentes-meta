@@ -4,11 +4,12 @@ import { MetaComplianceAgent } from "../implementations/meta-compliance.agent";
 import { PaidTrafficStrategistAgent } from "../implementations/paid-traffic.agent";
 import { PostCreatorAgent } from "../implementations/post-creator.agent";
 import { ProductManagerAgent } from "../implementations/product-manager.agent";
+import { MarketingDirectorAgent } from "../implementations/marketing-director.agent";
 import { SimpleStrategyAgent } from "../implementations/simple-strategy.agent";
 import type { AgentRegistry } from "../types/agent.interfaces";
 
 export const defaultAgents: AgentRegistry = {
-  marketingDirector: new SimpleStrategyAgent("MarketingDirectorAgent", "medium", "define_strategy"),
+  marketingDirector: new MarketingDirectorAgent(),
   paidTrafficStrategist: new PaidTrafficStrategistAgent(),
   performanceAnalyst: new SimpleStrategyAgent("PerformanceAnalystAgent", "low", "analyze_campaign_performance"),
   adCopywriter: new AdCopywriterAgent(),

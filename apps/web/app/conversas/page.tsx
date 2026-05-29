@@ -65,6 +65,9 @@ export default function ConversasPage() {
   const [loading, setLoading] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
 
   const selected = items.find((c) => c.id === selectedId) ?? null;
 
@@ -79,7 +82,9 @@ export default function ConversasPage() {
       setItems(data.items);
       setSelectedId((prev) => prev ?? data.items[0]?.id ?? null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao carregar conversas");
+      const msg = e instanceof Error ? e.message : "Erro ao carregar conversas";
+      setError(msg);
+      setNeedsLogin(msg.includes("401") || !getStoredAuthToken());
       setItems([]);
     } finally {
       setLoading(false);
@@ -110,11 +115,29 @@ export default function ConversasPage() {
     else setThread([]);
   }, [selectedId, loadThread]);
 
-  const needsLogin = !getStoredAuthToken() && error?.includes("401");
+  async function sendReply() {
+    if (!selectedId || !replyText.trim()) return;
+    setSending(true);
+    setError(null);
+    try {
+      await fetchApi(`/api/conversations/${selectedId}/messages`, {
+        ...getAuthFetchOptions(),
+        method: "POST",
+        body: JSON.stringify({ content: replyText.trim() })
+      });
+      setReplyText("");
+      await loadThread(selectedId);
+      await loadConversations();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao enviar mensagem.");
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <main className="dashboard-layout">
-      <Sidebar />
+      <Sidebar activePath="/conversas" />
       <section className="content inbox-page">
         <header className="inbox-header">
           <div>
@@ -210,6 +233,25 @@ export default function ConversasPage() {
                     </div>
                   ))}
                 </div>
+
+                <form
+                  className="thread-composer"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void sendReply();
+                  }}
+                >
+                  <textarea
+                    rows={2}
+                    placeholder="Responder pelo WhatsApp ou Instagram…"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    disabled={sending}
+                  />
+                  <button type="submit" className="btn primary" disabled={sending || !replyText.trim()}>
+                    {sending ? "Enviando…" : "Enviar"}
+                  </button>
+                </form>
               </>
             )}
           </section>

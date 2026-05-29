@@ -84,7 +84,14 @@ agentsRouter.post("/orchestrate", async (req: AuthenticatedRequest, res) => {
         description: pendingApproval.reason,
         riskLevel: pendingApproval.riskLevel.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
         requestedBy: userId,
-        requestedData: pendingApproval.payload as object
+        requestedData: {
+          agentName: pendingApproval.agentName,
+          payload: pendingApproval.payload,
+          objective: parsed.data.objective,
+          maxDailyBudget: parsed.data.maxDailyBudget,
+          productId: parsed.data.productId,
+          campaignType: parsed.data.campaignType
+        } as object
       }
     });
   }
