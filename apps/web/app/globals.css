@@ -163,6 +163,88 @@ code {
   border-radius: 4px;
 }
 
+.meta-assets {
+  margin-top: 20px;
+  border-top: 1px solid #e4e7ec;
+  padding-top: 16px;
+}
+
+.meta-assets-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meta-assets-head h4 {
+  margin: 0;
+}
+
+.meta-assets-head button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d5dd;
+  background: #f2f4f7;
+  color: #344054;
+  font: inherit;
+  cursor: pointer;
+}
+
+.meta-assets-head button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.asset-group {
+  margin-top: 14px;
+}
+
+.asset-group h5 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: #344054;
+}
+
+.asset-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asset-list li {
+  background: #f9fafb;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.asset-ig {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.asset-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.asset-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #eff8ff;
+  color: #175cd3;
+}
+
 /* Inbox conversas */
 .inbox-page .content {
   display: flex;

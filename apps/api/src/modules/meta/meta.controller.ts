@@ -28,7 +28,7 @@ import {
   validateOAuthState
 } from "./services/meta-oauth.service";
 import { MetaGraphRequestError } from "./services/meta-graph.client";
-import { syncMetaAssetsFromGraph } from "./services/meta-assets.service";
+import { discoverMetaAssets, syncMetaAssetsFromGraph } from "./services/meta-assets.service";
 import { getEffectiveMetaIds } from "../../config/meta-runtime";
 import { buildMetaConsoleConfig } from "./services/meta-console-config.service";
 
@@ -325,6 +325,38 @@ metaRouter.post("/campaigns", requireOperatorAccess, async (req, res) => {
     status: req.body?.status === "ACTIVE" ? "ACTIVE" : "PAUSED"
   });
   res.status(result.ok ? 200 : 502).json(result);
+});
+
+/** Lista todos os ativos conectados (businesses, ad accounts, páginas, Instagram, WhatsApp). */
+metaRouter.get("/assets", requireOperatorAccess, async (_req, res) => {
+  if (!getMetaAccessToken()) {
+    res.status(409).json({
+      ok: false,
+      error: "Token Meta ausente. Conecte sua conta via OAuth antes de listar ativos.",
+      oauthLoginUrl: "/api/meta/oauth/login-url"
+    });
+    return;
+  }
+
+  try {
+    const assets = await discoverMetaAssets();
+    res.json({
+      ok: true,
+      summary: {
+        businesses: assets.businesses.length,
+        adAccounts: assets.adAccounts.length,
+        pages: assets.pages.length,
+        instagramAccounts: assets.instagramAccounts.length,
+        whatsappAccounts: assets.whatsappAccounts.length
+      },
+      ...assets
+    });
+  } catch (error) {
+    res.status(502).json({
+      ok: false,
+      error: error instanceof Error ? error.message : "Falha ao descobrir ativos Meta."
+    });
+  }
 });
 
 metaRouter.post("/sync-assets", requireOperatorAccess, async (_req, res) => {
