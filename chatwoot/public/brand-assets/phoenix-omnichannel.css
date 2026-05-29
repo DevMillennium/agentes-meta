@@ -1,0 +1,309 @@
+/* Phoenix Digital Omnichannel — camada visual sobre Chatwoot (não altera lógica) */
+:root {
+  --phoenix-gold: #c9a227;
+  --phoenix-gold-light: #e8d48b;
+  --phoenix-gold-dark: #8b6914;
+  --phoenix-gold-muted: rgba(201, 162, 39, 0.45);
+  --phoenix-ink: #0a0a0a;
+  --phoenix-charcoal: #121212;
+  --phoenix-card: rgba(22, 20, 16, 0.92);
+  --phoenix-silver: #b8b4a8;
+}
+
+.bg-woot-500,
+.bg-n-brand,
+button.bg-woot-500,
+a.bg-woot-500 {
+  background-color: var(--phoenix-gold) !important;
+}
+.bg-woot-500:hover,
+.bg-n-brand:hover {
+  background-color: var(--phoenix-gold-dark) !important;
+}
+.text-woot-500,
+.text-n-brand {
+  color: var(--phoenix-gold) !important;
+}
+.border-woot-500,
+.ring-woot-500 {
+  border-color: var(--phoenix-gold) !important;
+  --tw-ring-color: var(--phoenix-gold) !important;
+}
+a.text-woot-500:hover {
+  color: var(--phoenix-gold-dark) !important;
+}
+.bg-woot-25 {
+  background: linear-gradient(180deg, #faf8f3 0%, #f5f0e6 100%) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Login premium — Phoenix Digital Omnichannel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body.phoenix-login-page {
+  background: #050505 !important;
+}
+
+body.phoenix-login-page #app,
+body.phoenix-login-page main.flex.min-h-screen.py-20 {
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background:
+    radial-gradient(
+      ellipse 120% 80% at 50% -20%,
+      rgba(201, 162, 39, 0.14) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 80% 50% at 50% 100%,
+      rgba(139, 105, 20, 0.08) 0%,
+      transparent 50%
+    ),
+    linear-gradient(180deg, #0d0c0a 0%, #050505 45%, #000000 100%) !important;
+  min-height: 100vh;
+}
+
+/* Logo — mesma largura do card (32rem) */
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 0.25rem;
+}
+
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  > img.mx-auto.h-8 {
+  content: url('/brand-assets/logo_login.png') !important;
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 40px rgba(201, 162, 39, 0.2));
+}
+
+/* Título redundante — logo já traz a marca */
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  > h2 {
+  display: none !important;
+}
+
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  > p {
+  margin-top: 1.25rem !important;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--phoenix-silver) !important;
+}
+
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  a.text-link,
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  a.text-n-brand {
+  color: var(--phoenix-gold-light) !important;
+  text-decoration: none;
+  border-bottom: 1px solid var(--phoenix-gold-muted);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  a.text-link:hover,
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section.max-w-5xl.mx-auto
+  a.text-n-brand:hover {
+  color: #fff !important;
+  border-bottom-color: var(--phoenix-gold-light);
+}
+
+/* Card de login */
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section[class*='max-w-lg'] {
+  width: 100% !important;
+  max-width: 32rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 2rem !important;
+  padding: 2.5rem 2.25rem !important;
+  background: var(--phoenix-card) !important;
+  border: 1px solid var(--phoenix-gold-muted) !important;
+  border-radius: 1rem !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 0 80px rgba(201, 162, 39, 0.06) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Linha decorativa acima do card */
+body.phoenix-login-page
+  main.flex.min-h-screen.py-20
+  > section[class*='max-w-lg']::before {
+  content: '';
+  display: block;
+  width: 3rem;
+  height: 1px;
+  margin: -1.25rem auto 1.75rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--phoenix-gold-light),
+    transparent
+  );
+}
+
+/* Labels */
+body.phoenix-login-page label,
+body.phoenix-login-page
+  main
+  section[class*='max-w-lg']
+  [class*='text-n-slate'] {
+  color: var(--phoenix-silver) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+}
+
+/* Inputs */
+body.phoenix-login-page input[type='text'],
+body.phoenix-login-page input[type='email'],
+body.phoenix-login-page input[type='password'] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(201, 162, 39, 0.22) !important;
+  border-radius: 0.5rem !important;
+  color: #f8f6f0 !important;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+body.phoenix-login-page input[type='text']::placeholder,
+body.phoenix-login-page input[type='email']::placeholder,
+body.phoenix-login-page input[type='password']::placeholder {
+  color: rgba(184, 180, 168, 0.45) !important;
+}
+
+body.phoenix-login-page input[type='text']:focus,
+body.phoenix-login-page input[type='email']:focus,
+body.phoenix-login-page input[type='password']:focus {
+  outline: none !important;
+  border-color: var(--phoenix-gold) !important;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Botão entrar */
+body.phoenix-login-page button[type='submit'],
+body.phoenix-login-page main section[class*='max-w-lg'] button.w-full {
+  background: linear-gradient(
+    135deg,
+    var(--phoenix-gold-light) 0%,
+    var(--phoenix-gold) 45%,
+    var(--phoenix-gold-dark) 100%
+  ) !important;
+  border: none !important;
+  color: #0a0a0a !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  font-size: 0.8125rem !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.35) !important;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease !important;
+}
+
+body.phoenix-login-page button[type='submit']:hover:not(:disabled),
+body.phoenix-login-page
+  main
+  section[class*='max-w-lg']
+  button.w-full:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(201, 162, 39, 0.45) !important;
+}
+
+/* Links (esqueci senha, SAML) */
+body.phoenix-login-page main section[class*='max-w-lg'] a {
+  color: var(--phoenix-gold-light) !important;
+}
+
+body.phoenix-login-page main section[class*='max-w-lg'] a:hover {
+  color: #fff !important;
+}
+
+body.phoenix-login-page
+  main
+  section[class*='max-w-lg']
+  a[class*='ring-n-container'] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(201, 162, 39, 0.25) !important;
+  color: var(--phoenix-silver) !important;
+}
+
+/* Divisor "ou" */
+body.phoenix-login-page main section[class*='max-w-lg'] [class*='uppercase'] {
+  color: rgba(184, 180, 168, 0.5) !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.2em;
+}
+
+/* MFA — mesmo card */
+body.phoenix-login-page main.flex.min-h-screen.py-20 > section.mt-11 {
+  width: 100% !important;
+  max-width: 32rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body.phoenix-login-page main.flex.min-h-screen.py-20 > section.mt-11 > * {
+  padding: 2rem;
+  background: var(--phoenix-card) !important;
+  border: 1px solid var(--phoenix-gold-muted) !important;
+  border-radius: 1rem !important;
+}
+
+/* Tagline abaixo do card (via pseudo no main) */
+body.phoenix-login-page main.flex.min-h-screen.py-20::after {
+  content: 'Building Global Opportunities';
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(201, 162, 39, 0.15);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(184, 180, 168, 0.45);
+}

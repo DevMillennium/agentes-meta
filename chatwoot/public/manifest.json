@@ -1,0 +1,20 @@
+{
+  "name": "Phoenix Digital Omnichannel",
+  "short_name": "Phoenix",
+  "icons": [
+    {
+      "src": "/brand-assets/logo_thumbnail.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#faf8f3",
+  "theme_color": "#b8860b"
+}

@@ -1,12 +1,4 @@
-# Chatwoot self-hosted — stack ISOLADA do backend Phoenix.
-# Banco e Redis próprios (portas 5433/6380/3001) — não conflita com docker-compose.yml.
-#
-# npm run chatwoot:up
-# npm run chatwoot:prepare
-# npm run chatwoot:bootstrap
-
-name: chatwoot
-
+# Phoenix Digital Omnichannel — Chatwoot (imagem oficial + extensões montadas)
 services:
   chatwoot-postgres:
     image: pgvector/pgvector:pg16
@@ -15,96 +7,93 @@ services:
       POSTGRES_DB: chatwoot
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
     volumes:
-      - chatwoot_pg_data:/var/lib/postgresql/data
+      - chatwoot_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d chatwoot"]
-      interval: 10s
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d chatwoot']
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   chatwoot-redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "6380:6379"
     volumes:
-      - chatwoot_redis_data:/data
+      - chatwoot_redis:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   chatwoot-rails:
     image: chatwoot/chatwoot:latest
-    env_file:
-      - .env.chatwoot
+    restart: unless-stopped
     depends_on:
       chatwoot-postgres:
         condition: service_healthy
       chatwoot-redis:
         condition: service_healthy
+    env_file:
+      - .env.chatwoot
     environment:
+      POSTGRES_HOST: chatwoot-postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: chatwoot
+      REDIS_URL: redis://chatwoot-redis:6379
       RAILS_ENV: production
       NODE_ENV: production
       INSTALLATION_ENV: docker
-      INSTALLATION_NAME: Phoenix Global Digital Automation
-      BRAND_NAME: Phoenix Global Digital Automation
-      POSTGRES_HOST: chatwoot-postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DATABASE: chatwoot
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
-      REDIS_URL: redis://chatwoot-redis:6379
-      FRONTEND_URL: http://localhost:3001
-      FORCE_SSL: "false"
-      ENABLE_ACCOUNT_SIGNUP: "true"
-      RAILS_LOG_TO_STDOUT: "true"
+    ports:
+      - '3001:3000'
     volumes:
       - chatwoot_storage:/app/storage
-      - ./chatwoot-brand/logo.png:/app/public/brand-assets/logo.png:ro
-      - ./chatwoot-brand/logo_dark.png:/app/public/brand-assets/logo_dark.png:ro
-      - ./chatwoot-brand/logo_thumbnail.png:/app/public/brand-assets/logo_thumbnail.png:ro
-      - ./chatwoot-brand/custom.css:/app/public/brand-assets/custom.css:ro
-    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
-    ports:
-      - "3001:3000"
-    restart: unless-stopped
+      - ./chatwoot/public/brand-assets/logo.png:/app/public/brand-assets/logo.png:ro
+      - ./chatwoot/public/brand-assets/logo_dark.png:/app/public/brand-assets/logo_dark.png:ro
+      - ./chatwoot/public/brand-assets/logo_thumbnail.png:/app/public/brand-assets/logo_thumbnail.png:ro
+      - ./chatwoot/public/brand-assets/logo_login.png:/app/public/brand-assets/logo_login.png:ro
+      - ./chatwoot/public/brand-assets/phoenix-omnichannel.css:/app/public/brand-assets/phoenix-omnichannel.css:ro
+      - ./chatwoot/public/manifest.json:/app/public/manifest.json:ro
+      - ./chatwoot/app/views/layouts/vueapp.html.erb:/app/app/views/layouts/vueapp.html.erb:ro
+      - ./chatwoot/config/routes.rb:/app/config/routes.rb:ro
+      - ./chatwoot/app/controllers/webhooks/meta_controller.rb:/app/app/controllers/webhooks/meta_controller.rb:ro
+      - ./chatwoot/app/services/phoenix:/app/app/services/phoenix:ro
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
 
   chatwoot-sidekiq:
     image: chatwoot/chatwoot:latest
-    env_file:
-      - .env.chatwoot
+    restart: unless-stopped
     depends_on:
       chatwoot-postgres:
         condition: service_healthy
       chatwoot-redis:
         condition: service_healthy
+    env_file:
+      - .env.chatwoot
     environment:
-      RAILS_ENV: production
-      NODE_ENV: production
-      INSTALLATION_ENV: docker
-      INSTALLATION_NAME: Phoenix Global Digital Automation
-      BRAND_NAME: Phoenix Global Digital Automation
       POSTGRES_HOST: chatwoot-postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DATABASE: chatwoot
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: chatwoot
       REDIS_URL: redis://chatwoot-redis:6379
-      FRONTEND_URL: http://localhost:3001
-      FORCE_SSL: "false"
-      RAILS_LOG_TO_STDOUT: "true"
+      RAILS_ENV: production
+      NODE_ENV: production
     volumes:
       - chatwoot_storage:/app/storage
-    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
-    restart: unless-stopped
+      - ./chatwoot/config/routes.rb:/app/config/routes.rb:ro
+      - ./chatwoot/app/controllers/webhooks/meta_controller.rb:/app/app/controllers/webhooks/meta_controller.rb:ro
+      - ./chatwoot/app/services/phoenix:/app/app/services/phoenix:ro
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
 
 volumes:
-  chatwoot_pg_data:
-  chatwoot_redis_data:
+  # Reutiliza dados da instalação Chatwoot anterior (conta, inboxes, tokens)
+  chatwoot_postgres:
+    external: true
+    name: chatwoot_chatwoot_pg_data
+  chatwoot_redis:
+    external: true
+    name: chatwoot_chatwoot_redis_data
   chatwoot_storage:
+    external: true
+    name: chatwoot_chatwoot_storage
