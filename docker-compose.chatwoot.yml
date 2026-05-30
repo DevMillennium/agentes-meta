@@ -54,6 +54,11 @@ services:
       - ./chatwoot/public/brand-assets/logo_thumbnail.png:/app/public/brand-assets/logo_thumbnail.png:ro
       - ./chatwoot/public/brand-assets/logo_login.png:/app/public/brand-assets/logo_login.png:ro
       - ./chatwoot/public/brand-assets/phoenix-omnichannel.css:/app/public/brand-assets/phoenix-omnichannel.css:ro
+      - ./chatwoot/public/brand-assets/phoenix-landing.css:/app/public/brand-assets/phoenix-landing.css:ro
+      - ./chatwoot/public/brand-assets/phoenix-landing.js:/app/public/brand-assets/phoenix-landing.js:ro
+      - ./chatwoot/app/controllers/phoenix:/app/app/controllers/phoenix:ro
+      - ./chatwoot/app/views/phoenix:/app/app/views/phoenix:ro
+      - ./chatwoot/app/views/layouts/phoenix_public.html.erb:/app/app/views/layouts/phoenix_public.html.erb:ro
       - ./chatwoot/public/manifest.json:/app/public/manifest.json:ro
       - ./chatwoot/app/views/layouts/vueapp.html.erb:/app/app/views/layouts/vueapp.html.erb:ro
       - ./chatwoot/config/routes.rb:/app/config/routes.rb:ro

@@ -14,8 +14,12 @@
 Abrir rapidamente:
 
 ```bash
+./phoenix home              # landing pública (/)
+./phoenix open              # painel /app
 ./scripts/phoenix-open-omnichannel.sh
 ```
+
+Landing SaaS: `docs/phoenix-landing-saas-flow.md`
 
 ## Meta (Messenger + Instagram + WhatsApp)
 

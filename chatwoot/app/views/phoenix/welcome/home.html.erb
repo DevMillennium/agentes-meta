@@ -1,0 +1,56 @@
+<% content_for :title, "#{@installation_name} — Omnichannel com IA" %>
+
+<section class="phoenix-hero">
+  <div class="phoenix-hero__content">
+    <h1 class="phoenix-hero__title">
+      Agentes de IA para suporte ao cliente, vendas e marketing
+    </h1>
+    <p class="phoenix-hero__subtitle">
+      Automatize o suporte, as vendas e a qualificação de leads em todos os canais de mensagens a partir de uma única plataforma omnichannel.
+    </p>
+    <p class="phoenix-hero__check">
+      <span aria-hidden="true">✓</span>
+      Inteligência artificial integrada ao seu fluxo de atendimento
+    </p>
+    <div class="phoenix-hero__actions">
+      <a href="<%= @signup_enabled ? '/app/auth/signup' : '/comecar/canais' %>" class="phoenix-btn phoenix-btn--primary">
+        Iniciar teste grátis
+      </a>
+      <a href="/comecar/canais" class="phoenix-btn phoenix-btn--outline">
+        Conectar um canal
+      </a>
+      <a href="/app/login" class="phoenix-btn phoenix-btn--outline">
+        Conectar-se
+      </a>
+    </div>
+    <div class="phoenix-channels-strip" aria-label="Canais suportados">
+      <span title="Messenger">💬</span>
+      <span title="WhatsApp">📱</span>
+      <span title="Instagram">📷</span>
+      <span title="E-mail">✉️</span>
+      <span title="Telegram">✈️</span>
+      <span title="Chat web">🌐</span>
+    </div>
+  </div>
+  <div class="phoenix-hero__visual">
+    <div class="phoenix-phone-mock">
+      <div class="phoenix-phone-mock__screen">
+        <div class="phoenix-chat-bubble phoenix-chat-bubble--in">
+          Olá! Como posso ajudar você hoje?
+        </div>
+        <div class="phoenix-chat-bubble phoenix-chat-bubble--out">
+          Quero saber o status do meu pedido
+        </div>
+        <div class="phoenix-chat-bubble phoenix-chat-bubble--in">
+          Claro. Informe o número do pedido, por favor.
+        </div>
+        <div class="phoenix-chat-bubble phoenix-chat-bubble--out">
+          #1234
+        </div>
+        <div class="phoenix-chat-bubble phoenix-chat-bubble--in">
+          Pedido em trânsito — previsão de entrega em 2 dias.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

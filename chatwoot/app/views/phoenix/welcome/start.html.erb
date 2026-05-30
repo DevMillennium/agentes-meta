@@ -1,0 +1,20 @@
+<% content_for :title, "Começar — #{@installation_name}" %>
+
+<div class="phoenix-start-box">
+  <h1 class="phoenix-page__title">Bem-vindo ao <%= @installation_name %></h1>
+  <p class="phoenix-page__desc">
+    <% if @signup_enabled %>
+      Crie sua conta em segundos e conecte Messenger, Instagram, WhatsApp e outros canais.
+    <% else %>
+      Conecte seus canais de mensagens e comece a atender em um único painel.
+    <% end %>
+  </p>
+  <% if @signup_enabled %>
+    <a href="/app/auth/signup" class="phoenix-btn phoenix-btn--primary">Criar conta grátis</a>
+  <% end %>
+  <p style="margin-top: 1.5rem;">
+    <a href="/comecar/canais">Já tenho conta — conectar canais</a>
+    ·
+    <a href="/app/login">Entrar</a>
+  </p>
+</div>

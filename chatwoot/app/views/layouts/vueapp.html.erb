@@ -79,6 +79,12 @@
     <% end %>
     <%= vite_client_tag %>
     <%= vite_javascript_tag @application_pack %>
+    <% if request.path.match?(%r{\A/app/login}) && session[:phoenix_post_login_channel].present? %>
+    <script>
+      sessionStorage.setItem('phoenix_post_login_channel', '<%= j session[:phoenix_post_login_channel] %>');
+    </script>
+    <% end %>
+    <script src="/brand-assets/phoenix-landing.js" defer></script>
   </head>
   <body class="text-slate-600<%= ' phoenix-login-page' if request.path.match?(%r{\A/app/login}) %>">
     <div id="app"></div>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= content_for?(:title) ? yield(:title) : @installation_name %></title>
+    <meta name="description" content="<%= @installation_name %> — plataforma omnichannel com IA para Messenger, Instagram, WhatsApp e mais.">
+    <meta name="theme-color" content="#c9a227">
+    <link rel="icon" type="image/png" href="/brand-assets/logo_thumbnail.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/brand-assets/phoenix-landing.css">
+  </head>
+  <body class="phoenix-public">
+    <header class="phoenix-header">
+      <a href="/" class="phoenix-brand">
+        <img src="/brand-assets/logo_login.png" alt="<%= @installation_name %>" class="phoenix-brand__logo">
+      </a>
+      <nav class="phoenix-nav">
+        <a href="/comecar/canais">Canais</a>
+        <a href="<%= @brand_url %>" target="_blank" rel="noopener">Sobre</a>
+        <a href="/app/login" class="phoenix-nav__link">Conectar-se</a>
+        <a href="<%= @signup_enabled ? '/app/auth/signup' : '/comecar' %>" class="phoenix-btn phoenix-btn--primary phoenix-btn--sm">Iniciar teste grátis</a>
+      </nav>
+    </header>
+
+    <main class="phoenix-main">
+      <%= yield %>
+    </main>
+
+    <footer class="phoenix-footer">
+      <p class="phoenix-footer__tagline">Building Global Opportunities</p>
+      <p class="phoenix-footer__copy">© <%= Time.current.year %> <%= @installation_name %></p>
+    </footer>
+
+    <script>
+      window.phoenixPublicConfig = {
+        defaultAccountId: '<%= @default_account_id %>',
+        signupEnabled: <%= @signup_enabled ? 'true' : 'false' %>
+      };
+    </script>
+    <script src="/brand-assets/phoenix-landing.js" defer></script>
+  </body>
+</html>

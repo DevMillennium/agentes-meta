@@ -14,7 +14,11 @@ Rails.application.routes.draw do
   if ActiveModel::Type::Boolean.new.cast(ENV.fetch('CW_API_ONLY_SERVER', false))
     root to: 'api#index'
   else
-    root to: 'dashboard#index'
+    # Phoenix Digital Omnichannel — landing pública (não altera /app)
+    root to: 'phoenix/welcome#home'
+    get '/comecar', to: 'phoenix/welcome#start'
+    get '/comecar/canais', to: 'phoenix/welcome#channels'
+    get '/comecar/continuar/:canal', to: 'phoenix/welcome#continue', as: :phoenix_continue_channel
 
     get '/app', to: 'dashboard#index'
     get '/app/*params', to: 'dashboard#index'

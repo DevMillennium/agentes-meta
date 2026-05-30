@@ -1,0 +1,29 @@
+<% content_for :title, "Conectar canais — #{@installation_name}" %>
+
+<div class="phoenix-page">
+  <h1 class="phoenix-page__title">Conectar canais</h1>
+  <p class="phoenix-page__desc">
+    Escolha um canal e clique em <strong>Continuar</strong>. Você será direcionado ao login (se necessário) e ao fluxo oficial de conexão Meta / Chatwoot.
+  </p>
+
+  <div class="phoenix-channel-list">
+    <% @channels.each do |ch| %>
+      <article class="phoenix-channel-card<%= ' phoenix-channel-card--highlight' if @highlight == ch[:key] %>">
+        <div class="phoenix-channel-card__icon phoenix-channel-card__icon--<%= ch[:icon] %>" aria-hidden="true">
+          <%= { 'messenger' => '💬', 'instagram' => '📷', 'whatsapp' => '📱', 'website' => '🌐', 'email' => '✉️', 'telegram' => '✈️' }[ch[:icon]] %>
+        </div>
+        <div class="phoenix-channel-card__body">
+          <h2 class="phoenix-channel-card__name"><%= ch[:name] %></h2>
+          <p class="phoenix-channel-card__desc"><%= ch[:desc] %></p>
+        </div>
+        <a href="/comecar/continuar/<%= ch[:key] %>" class="phoenix-btn phoenix-btn--primary">Continuar</a>
+      </article>
+    <% end %>
+  </div>
+
+  <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem; color: var(--phoenix-muted);">
+    <a href="/app">Ir para o painel</a>
+    ·
+    <a href="/">Voltar ao início</a>
+  </p>
+</div>

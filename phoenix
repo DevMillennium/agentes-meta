@@ -13,6 +13,8 @@ Phoenix Digital Omnichannel — comandos
   ./phoenix activate          Remove inboxes legados + deixa Meta operacional
   ./phoenix connect [canal]   Abre OAuth: facebook|instagram|whatsapp|inbox|new
   ./phoenix open              Abre o painel /app no browser
+  ./phoenix home              Abre a landing pública (/)
+  ./phoenix signup-on         Habilita cadastro público (teste grátis)
   ./phoenix oauth             URL OAuth Meta (token servidor)
   ./phoenix tunnel            Cloudflare tunnel + meta sync
   ./phoenix logos             Regenera assets de logo
@@ -30,6 +32,12 @@ case "$cmd" in
   activate|go-live)        exec "$SCRIPTS/phoenix-omnichannel-activate.sh" "$@" ;;
   connect|channels)        exec "$SCRIPTS/phoenix-connect-channels.sh" "$@" ;;
   open)                    exec "$SCRIPTS/phoenix-open-omnichannel.sh" "$@" ;;
+  signup-on|saas-signup)   exec "$SCRIPTS/phoenix-enable-saas-signup.sh" "$@" ;;
+  home|landing)
+    # shellcheck disable=SC1091
+    [[ -f "$ROOT/.env.chatwoot" ]] && source "$ROOT/.env.chatwoot"
+    open "${PHOENIX_OMNICHANNEL_URL:-http://localhost:3001}/" 2>/dev/null || echo "${PHOENIX_OMNICHANNEL_URL:-http://localhost:3001}/"
+    ;;
   oauth)                   exec "$SCRIPTS/phoenix-meta-oauth-url.sh" "$@" ;;
   tunnel)                  exec "$SCRIPTS/phoenix-tunnel-chatwoot.sh" "$@" ;;
   logos)                   exec python3 "$SCRIPTS/phoenix-generate-branding.py" "$@" ;;

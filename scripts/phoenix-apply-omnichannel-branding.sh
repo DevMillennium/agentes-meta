@@ -25,7 +25,9 @@ docker compose -f docker-compose.chatwoot.yml exec -T chatwoot-rails bundle exec
     'IG_VERIFY_TOKEN' => ENV.fetch('IG_VERIFY_TOKEN', 'phoenix-verify-token'),
     'INSTAGRAM_VERIFY_TOKEN' => ENV.fetch('INSTAGRAM_VERIFY_TOKEN', 'phoenix-verify-token'),
     'FACEBOOK_API_VERSION' => 'v25.0',
-    'INSTAGRAM_API_VERSION' => 'v25.0'
+    'INSTAGRAM_API_VERSION' => 'v25.0',
+    'ENABLE_ACCOUNT_SIGNUP' => 'true',
+    'CREATE_NEW_ACCOUNT_FROM_DASHBOARD' => 'true'
   }
   configs.each do |name, value|
     ic = InstallationConfig.find_or_initialize_by(name: name)
