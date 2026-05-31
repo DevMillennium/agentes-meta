@@ -53,15 +53,20 @@ services:
       - ./chatwoot/public/brand-assets/logo_dark.png:/app/public/brand-assets/logo_dark.png:ro
       - ./chatwoot/public/brand-assets/logo_thumbnail.png:/app/public/brand-assets/logo_thumbnail.png:ro
       - ./chatwoot/public/brand-assets/logo_login.png:/app/public/brand-assets/logo_login.png:ro
+      - ./chatwoot/public/brand-assets/phoenix-emblem.png:/app/public/brand-assets/phoenix-emblem.png:ro
+      - ./chatwoot/public/brand-assets/phoenix-hero-cinematic.png:/app/public/brand-assets/phoenix-hero-cinematic.png:ro
       - ./chatwoot/public/brand-assets/phoenix-omnichannel.css:/app/public/brand-assets/phoenix-omnichannel.css:ro
       - ./chatwoot/public/brand-assets/phoenix-landing.css:/app/public/brand-assets/phoenix-landing.css:ro
       - ./chatwoot/public/brand-assets/phoenix-landing.js:/app/public/brand-assets/phoenix-landing.js:ro
+      - ./chatwoot/public/brand-assets/phoenix-facebook-inbox.js:/app/public/brand-assets/phoenix-facebook-inbox.js:ro
+      - ./chatwoot/app/views/api/v1/accounts/callbacks/facebook_pages.json.jbuilder:/app/app/views/api/v1/accounts/callbacks/facebook_pages.json.jbuilder:ro
       - ./chatwoot/app/controllers/phoenix:/app/app/controllers/phoenix:ro
       - ./chatwoot/app/views/phoenix:/app/app/views/phoenix:ro
       - ./chatwoot/app/views/layouts/phoenix_public.html.erb:/app/app/views/layouts/phoenix_public.html.erb:ro
       - ./chatwoot/public/manifest.json:/app/public/manifest.json:ro
       - ./chatwoot/app/views/layouts/vueapp.html.erb:/app/app/views/layouts/vueapp.html.erb:ro
       - ./chatwoot/config/routes.rb:/app/config/routes.rb:ro
+      - ./chatwoot/config/initializers/phoenix_facebook_pages.rb:/app/config/initializers/phoenix_facebook_pages.rb:ro
       - ./chatwoot/app/controllers/webhooks/meta_controller.rb:/app/app/controllers/webhooks/meta_controller.rb:ro
       - ./chatwoot/app/services/phoenix:/app/app/services/phoenix:ro
     command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']

@@ -1,56 +1,98 @@
 <% content_for :title, "#{@installation_name} — Omnichannel com IA" %>
 
-<section class="phoenix-hero">
-  <div class="phoenix-hero__content">
-    <h1 class="phoenix-hero__title">
-      Agentes de IA para suporte ao cliente, vendas e marketing
-    </h1>
-    <p class="phoenix-hero__subtitle">
-      Automatize o suporte, as vendas e a qualificação de leads em todos os canais de mensagens a partir de uma única plataforma omnichannel.
-    </p>
-    <p class="phoenix-hero__check">
-      <span aria-hidden="true">✓</span>
-      Inteligência artificial integrada ao seu fluxo de atendimento
-    </p>
-    <div class="phoenix-hero__actions">
-      <a href="<%= @signup_enabled ? '/app/auth/signup' : '/comecar/canais' %>" class="phoenix-btn phoenix-btn--primary">
-        Iniciar teste grátis
-      </a>
-      <a href="/comecar/canais" class="phoenix-btn phoenix-btn--outline">
-        Conectar um canal
-      </a>
-      <a href="/app/login" class="phoenix-btn phoenix-btn--outline">
-        Conectar-se
-      </a>
-    </div>
-    <div class="phoenix-channels-strip" aria-label="Canais suportados">
-      <span title="Messenger">💬</span>
-      <span title="WhatsApp">📱</span>
-      <span title="Instagram">📷</span>
-      <span title="E-mail">✉️</span>
-      <span title="Telegram">✈️</span>
-      <span title="Chat web">🌐</span>
-    </div>
-  </div>
-  <div class="phoenix-hero__visual">
-    <div class="phoenix-phone-mock">
-      <div class="phoenix-phone-mock__screen">
-        <div class="phoenix-chat-bubble phoenix-chat-bubble--in">
-          Olá! Como posso ajudar você hoje?
+<div class="phoenix-landing-screen">
+  <section class="phoenix-hero phoenix-hero--premium">
+    <div class="phoenix-hero__glow" aria-hidden="true"></div>
+    <div class="phoenix-hero__inner">
+      <div class="phoenix-hero__content">
+        <span class="phoenix-hero__eyebrow">Phoenix Digital Omnichannel</span>
+        <h1 class="phoenix-hero__title">
+          <span class="phoenix-hero__title-accent">Agentes de IA</span>
+          para suporte, vendas e marketing.
+        </h1>
+        <p class="phoenix-hero__subtitle">
+          Automatize atendimento e leads em Messenger, Instagram, WhatsApp e chat do site — uma plataforma omnichannel.
+        </p>
+        <p class="phoenix-hero__check">
+          <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="9" fill="currentColor" opacity="0.15"/><path d="M5.5 9.2l2 2 5-5.2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          IA integrada · sem conta OpenAI
+        </p>
+
+        <div class="phoenix-hero__cta-row">
+          <a href="<%= @signup_enabled ? '/app/auth/signup' : '/comecar/canais' %>" class="phoenix-btn phoenix-btn--hero">
+            Iniciar teste grátis
+          </a>
+          <a href="/comecar/canais" class="phoenix-btn phoenix-btn--outline phoenix-btn--hero-secondary">
+            Ver canais
+          </a>
         </div>
-        <div class="phoenix-chat-bubble phoenix-chat-bubble--out">
-          Quero saber o status do meu pedido
+
+        <p class="phoenix-hero__signin">
+          Já tem conta? <a href="/app/login">Entrar</a>
+          · <a href="/comecar/canais?canal=facebook">Facebook</a>
+          · <a href="/comecar/canais?canal=instagram">Instagram</a>
+        </p>
+
+        <div class="phoenix-channel-icons" aria-label="Canais suportados">
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--messenger" title="Messenger"></span>
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--whatsapp" title="WhatsApp"></span>
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--instagram" title="Instagram"></span>
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--telegram" title="Telegram"></span>
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--email" title="E-mail"></span>
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--web" title="Chat web"></span>
+          <span class="phoenix-channel-icons__item phoenix-channel-icons__item--ai" title="IA Captain"></span>
         </div>
-        <div class="phoenix-chat-bubble phoenix-chat-bubble--in">
-          Claro. Informe o número do pedido, por favor.
-        </div>
-        <div class="phoenix-chat-bubble phoenix-chat-bubble--out">
-          #1234
-        </div>
-        <div class="phoenix-chat-bubble phoenix-chat-bubble--in">
-          Pedido em trânsito — previsão de entrega em 2 dias.
+      </div>
+
+      <div class="phoenix-hero__visual">
+        <div class="phoenix-device" aria-hidden="true">
+          <div class="phoenix-device__bezel">
+            <div class="phoenix-device__notch"></div>
+            <div class="phoenix-device__screen">
+              <div class="phoenix-device__cinema">
+                <img src="/brand-assets/phoenix-hero-cinematic.png" alt="" class="phoenix-device__cinema-frame">
+                <div class="phoenix-device__cinema-glow"></div>
+                <div class="phoenix-device__cinema-streaks"></div>
+              </div>
+              <div class="phoenix-device__app">
+                <div class="phoenix-device__header">
+                  <img src="/brand-assets/phoenix-emblem.png" alt="" class="phoenix-device__avatar" width="22" height="22">
+                  <div class="phoenix-device__meta">
+                    <strong>Fernanda</strong>
+                    <small>Phoenix · online</small>
+                  </div>
+                </div>
+                <div class="phoenix-device__chat" data-phoenix-chat-demo>
+                  <div class="phoenix-chat-bubble phoenix-chat-bubble--in">Olá! Como posso ajudar?</div>
+                  <div class="phoenix-chat-bubble phoenix-chat-bubble--out">Pedido #1234</div>
+                  <div class="phoenix-chat-bubble phoenix-chat-bubble--in">Em trânsito — 2 dias 🚚</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section class="phoenix-features phoenix-features--compact" aria-label="Recursos">
+    <div class="phoenix-features__grid">
+      <article class="phoenix-feature-card">
+        <h3>IA que atende</h3>
+        <p>Captain 24/7 em todos os canais.</p>
+      </article>
+      <article class="phoenix-feature-card">
+        <h3>Caixa única</h3>
+        <p>Todas as conversas em um painel.</p>
+      </article>
+      <article class="phoenix-feature-card">
+        <h3>Integrações</h3>
+        <p>OpenAI, Make, Zapier e webhooks.</p>
+      </article>
+      <article class="phoenix-feature-card">
+        <h3>Widget web</h3>
+        <p>Chat no site em minutos.</p>
+      </article>
+    </div>
+  </section>
+</div>

@@ -5,23 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= content_for?(:title) ? yield(:title) : @installation_name %></title>
     <meta name="description" content="<%= @installation_name %> — plataforma omnichannel com IA para Messenger, Instagram, WhatsApp e mais.">
-    <meta name="theme-color" content="#c9a227">
+    <meta name="theme-color" content="#020806">
     <link rel="icon" type="image/png" href="/brand-assets/logo_thumbnail.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/brand-assets/phoenix-landing.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/brand-assets/phoenix-landing.css?v=20260531phone">
   </head>
-  <body class="phoenix-public">
-    <header class="phoenix-header">
+  <body class="phoenix-public<%= controller.action_name == 'home' ? ' phoenix-public--home' : '' %>">
+    <% if controller.action_name == 'home' %>
+      <canvas class="phoenix-matrix-canvas" aria-hidden="true"></canvas>
+    <% end %>
+    <header class="phoenix-header phoenix-header--premium">
       <a href="/" class="phoenix-brand">
-        <img src="/brand-assets/logo_login.png" alt="<%= @installation_name %>" class="phoenix-brand__logo">
+        <img src="/brand-assets/logo_thumbnail.png" alt="<%= @installation_name %>" class="phoenix-brand__mark" width="36" height="36">
+        <span class="phoenix-brand__wordmark">Phoenix <em>Omnichannel</em></span>
       </a>
-      <nav class="phoenix-nav">
+      <nav class="phoenix-nav" aria-label="Navegação principal">
         <a href="/comecar/canais">Canais</a>
+        <a href="/comecar/integracoes">Integrações</a>
+        <a href="/comecar/widget">Widget</a>
+        <a href="/comecar/paginas-business">Páginas Business</a>
         <a href="<%= @brand_url %>" target="_blank" rel="noopener">Sobre</a>
-        <a href="/app/login" class="phoenix-nav__link">Conectar-se</a>
-        <a href="<%= @signup_enabled ? '/app/auth/signup' : '/comecar' %>" class="phoenix-btn phoenix-btn--primary phoenix-btn--sm">Iniciar teste grátis</a>
+        <% if cookies['cw_d_session_info'].present? %>
+          <a href="/app" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Painel</a>
+        <% else %>
+          <a href="/app/login" class="phoenix-nav__link">Entrar</a>
+          <a href="<%= @signup_enabled ? '/app/auth/signup' : '/comecar/canais' %>" class="phoenix-btn phoenix-btn--nav-cta">Teste grátis</a>
+        <% end %>
       </nav>
     </header>
 
@@ -29,7 +40,7 @@
       <%= yield %>
     </main>
 
-    <footer class="phoenix-footer">
+    <footer class="phoenix-footer phoenix-footer--premium">
       <p class="phoenix-footer__tagline">Building Global Opportunities</p>
       <p class="phoenix-footer__copy">© <%= Time.current.year %> <%= @installation_name %></p>
     </footer>

@@ -18,6 +18,9 @@ Rails.application.routes.draw do
     root to: 'phoenix/welcome#home'
     get '/comecar', to: 'phoenix/welcome#start'
     get '/comecar/canais', to: 'phoenix/welcome#channels'
+    get '/comecar/paginas-business', to: 'phoenix/welcome#business_pages'
+    get '/comecar/integracoes', to: 'phoenix/welcome#integrations'
+    get '/comecar/widget', to: 'phoenix/welcome#widget_embed'
     get '/comecar/continuar/:canal', to: 'phoenix/welcome#continue', as: :phoenix_continue_channel
 
     get '/app', to: 'dashboard#index'

@@ -32,6 +32,7 @@ Phoenix — conectar canais (OAuth no Chatwoot)
   Instagram:          ${IG}
   WhatsApp:           ${WA}
   Lista:              ${LIST}
+  Páginas Business:   ${BASE}/comecar/paginas-business  (./phoenix paginas)
 EOF
 if [[ -n "$EXISTING" ]]; then
   echo "  Inbox Meta atual:   ${EXISTING}"

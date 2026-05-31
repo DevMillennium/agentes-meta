@@ -29,6 +29,16 @@ Abrir no terminal:
 ./phoenix connect
 ```
 
+## Administrador — várias páginas Business
+
+1. **Listar e alternar** caixas já ligadas: `/comecar/paginas-business` ou `./phoenix paginas`
+2. **Conectar outra página**: Messenger → OAuth → no passo 2 o menu lista **todas** as páginas:
+   - `＋ Nome` = nova caixa
+   - `★ Nome — Caixa «…»` = já conectada (reautorizar ou seguir para a mesma caixa)
+3. **No painel**: menu lateral **Canais** → clique na caixa desejada
+
+Cada Página Facebook = **uma caixa de entrada** (não vários IG na mesma caixa `FacebookPage`).
+
 ## Passo a passo (usuário final)
 
 ### 1. Entrar como administrador

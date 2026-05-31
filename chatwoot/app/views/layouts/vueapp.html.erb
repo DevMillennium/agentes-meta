@@ -85,6 +85,10 @@
     </script>
     <% end %>
     <script src="/brand-assets/phoenix-landing.js" defer></script>
+    <% if request.path.match?(%r{inboxes/new/facebook}) %>
+      <link rel="stylesheet" href="/brand-assets/phoenix-landing.css">
+      <script src="/brand-assets/phoenix-facebook-inbox.js" defer></script>
+    <% end %>
   </head>
   <body class="text-slate-600<%= ' phoenix-login-page' if request.path.match?(%r{\A/app/login}) %>">
     <div id="app"></div>

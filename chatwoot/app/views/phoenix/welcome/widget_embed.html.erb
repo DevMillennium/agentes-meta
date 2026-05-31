@@ -1,0 +1,39 @@
+<% content_for :title, "Widget no site — #{@installation_name}" %>
+
+<div class="phoenix-page phoenix-page--wide">
+  <h1 class="phoenix-page__title">Chat no seu website</h1>
+  <p class="phoenix-page__desc">
+    Cole o código abaixo antes de <code>&lt;/body&gt;</code> em
+    <a href="<%= @brand_url %>" target="_blank" rel="noopener">phoenixglobal.com.br</a>
+    ou qualquer site (equivalente ao widget Chatrace / omnichannel).
+  </p>
+
+  <% if @widget_snippet.blank? %>
+    <div class="phoenix-alert">
+      <p>Nenhum widget configurado. Rode <code>./phoenix p1</code> ou crie a caixa «Chat no site» no painel.</p>
+      <a href="/comecar/continuar/website" class="phoenix-btn phoenix-btn--primary">Conectar canal Website</a>
+    </div>
+  <% else %>
+    <p class="phoenix-page__meta">
+      Caixa de entrada #<%= @widget_inbox_id %> ·
+      <a href="/app/accounts/<%= @default_account_id %>/settings/inboxes/<%= @widget_inbox_id %>">Configurar no painel</a>
+    </p>
+    <div class="phoenix-code-wrap">
+      <pre class="phoenix-code" id="phoenix-widget-code"><%= h(@widget_snippet) %></pre>
+      <button type="button" class="phoenix-btn phoenix-btn--primary phoenix-btn--sm" id="phoenix-copy-widget">Copiar código</button>
+    </div>
+    <script>
+      document.getElementById('phoenix-copy-widget')?.addEventListener('click', function () {
+        var el = document.getElementById('phoenix-widget-code');
+        if (!el) return;
+        navigator.clipboard.writeText(el.textContent).then(function () {
+          alert('Código copiado!');
+        });
+      });
+    </script>
+  <% end %>
+
+  <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem;">
+    <a href="/comecar/integracoes">Integrações</a> · <a href="/comecar/canais">Canais</a> · <a href="/">Início</a>
+  </p>
+</div>

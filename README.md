@@ -21,7 +21,14 @@ docker compose -f docker-compose.chatwoot.yml up -d
 ./phoenix activate    # limpa inboxes legados
 ./phoenix connect     # telas OAuth (Facebook / Instagram / WhatsApp)
 ./phoenix tunnel      # HTTPS dev (Cloudflare)
+./phoenix go-live     # automação máxima (Meta, Captain, E2E)
+./phoenix verify      # checagem operacional
+./phoenix captain     # assistente IA Fernanda
 ```
+
+Manual (Meta Console, DM real, domínio fixo): [docs/phoenix-manual-pendente.md](docs/phoenix-manual-pendente.md)
+
+Chatrace → Phoenix: [docs/phoenix-chatrace-parity.md](docs/phoenix-chatrace-parity.md) · P3 comentários: [docs/phoenix-p3-comments-roadmap.md](docs/phoenix-p3-comments-roadmap.md)
 
 ## Documentação
 

@@ -1,0 +1,50 @@
+<% content_for :title, "Integrações — #{@installation_name}" %>
+
+<div class="phoenix-page phoenix-page--wide">
+  <h1 class="phoenix-page__title">Integrações</h1>
+  <p class="phoenix-page__desc">
+    Conecte o <%= @installation_name %> ao seu ecossistema — no estilo da
+    <a href="https://docs.chatrace.com/" target="_blank" rel="noopener">base Chatrace</a>,
+    usando o que o Chatwoot já oferece nativamente ou via webhooks.
+  </p>
+
+  <div class="phoenix-integration-list">
+    <% @integrations.each do |item| %>
+      <article class="phoenix-integration-card">
+        <div class="phoenix-integration-card__icon" aria-hidden="true"><%= item[:icon] %></div>
+        <div class="phoenix-integration-card__body">
+          <h2 class="phoenix-integration-card__name"><%= item[:name] %></h2>
+          <span class="phoenix-integration-card__badge"><%= item[:status] %></span>
+          <p class="phoenix-integration-card__desc"><%= item[:desc] %></p>
+          <% if item[:key] == 'openai' %>
+            <a href="/app/accounts/<%= @default_account_id %>/settings/integrations" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Configurar no painel</a>
+          <% elsif item[:key] == 'meta' %>
+            <a href="/comecar/canais" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Conectar Meta</a>
+          <% elsif item[:key] == 'webhooks' %>
+            <a href="/app/accounts/<%= @default_account_id %>/settings/integrations" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Webhooks da conta</a>
+          <% elsif item[:key] == 'dialogflow' %>
+            <a href="/app/accounts/<%= @default_account_id %>/settings/agent-bots" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Criar Robô (webhook)</a>
+          <% elsif item[:doc]&.start_with?('http') %>
+            <a href="<%= item[:doc] %>" target="_blank" rel="noopener" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Documentação</a>
+          <% end %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+
+  <div class="phoenix-callout">
+    <h3>Make e Zapier</h3>
+    <p>
+      Use o URL público <code><%= @public_base_url %></code> e a API do Chatwoot
+      (<code>api_access_token</code>) para disparar automações quando chegar uma mensagem.
+    </p>
+    <p>
+      <a href="<%= @public_base_url %>/swagger" target="_blank" rel="noopener">API Swagger</a>
+      · Captain IA: <a href="/app/accounts/<%= @default_account_id %>/captain/assistants">Assistentes</a>
+    </p>
+  </div>
+
+  <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem;">
+    <a href="/comecar/canais">Canais</a> · <a href="/comecar/widget">Widget no site</a> · <a href="/">Início</a>
+  </p>
+</div>

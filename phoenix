@@ -12,12 +12,21 @@ Phoenix Digital Omnichannel — comandos
   ./phoenix meta              Sincroniza Meta + webhooks + Chatwoot
   ./phoenix activate          Remove inboxes legados + deixa Meta operacional
   ./phoenix connect [canal]   Abre OAuth: facebook|instagram|whatsapp|inbox|new
+  ./phoenix paginas         Lista páginas Business / alternar caixas
   ./phoenix open              Abre o painel /app no browser
   ./phoenix home              Abre a landing pública (/)
   ./phoenix signup-on         Habilita cadastro público (teste grátis)
   ./phoenix oauth             URL OAuth Meta (token servidor)
   ./phoenix tunnel            Cloudflare tunnel + meta sync
   ./phoenix logos             Regenera assets de logo
+  ./phoenix verify            Checagem não destrutiva (rotas, volumes, Meta inbox)
+  ./phoenix captain           Captain + Fernanda (OpenAI) na inbox Meta
+  ./phoenix go-live           Automação máxima (Meta, Captain, E2E, verify)
+  ./phoenix e2e               Simula DM Messenger + testa Captain
+  ./phoenix sync-url          Sincroniza FRONTEND_URL com tunnel/.env
+  ./phoenix p1                P1 Chatrace: Instagram ID, widget, WhatsApp prep
+  ./phoenix seed              Respostas prontas + labels + automação
+  ./phoenix widget-test       Gera/abre página local de teste do widget
 
 Diretório do projeto: $ROOT
 EOF
@@ -31,6 +40,11 @@ case "$cmd" in
   meta|meta-full)          exec "$SCRIPTS/phoenix-meta-full-auto.sh" "$@" ;;
   activate|go-live)        exec "$SCRIPTS/phoenix-omnichannel-activate.sh" "$@" ;;
   connect|channels)        exec "$SCRIPTS/phoenix-connect-channels.sh" "$@" ;;
+  paginas|paginas-business|business)
+    # shellcheck disable=SC1091
+    [[ -f "$ROOT/.env.chatwoot" ]] && source "$ROOT/.env.chatwoot"
+    open "${PHOENIX_OMNICHANNEL_URL:-http://localhost:3001}/comecar/paginas-business" 2>/dev/null || true
+    ;;
   open)                    exec "$SCRIPTS/phoenix-open-omnichannel.sh" "$@" ;;
   signup-on|saas-signup)   exec "$SCRIPTS/phoenix-enable-saas-signup.sh" "$@" ;;
   home|landing)
@@ -41,6 +55,14 @@ case "$cmd" in
   oauth)                   exec "$SCRIPTS/phoenix-meta-oauth-url.sh" "$@" ;;
   tunnel)                  exec "$SCRIPTS/phoenix-tunnel-chatwoot.sh" "$@" ;;
   logos)                   exec python3 "$SCRIPTS/phoenix-generate-branding.py" "$@" ;;
+  verify|check)            exec "$SCRIPTS/phoenix-verify-omnichannel.sh" "$@" ;;
+  captain|fernanda|ai-bot) exec "$SCRIPTS/phoenix-setup-captain-assistant.sh" "$@" ;;
+  go-live|golive|100)      exec "$SCRIPTS/phoenix-go-live-full-auto.sh" "$@" ;;
+  e2e|test-messenger)      exec "$SCRIPTS/phoenix-e2e-messenger-test.sh" "$@" ;;
+  sync-url|syncurl)        exec "$SCRIPTS/phoenix-sync-public-url.sh" "$@" ;;
+  p1|p1-channels)          exec "$SCRIPTS/phoenix-p1-channels.sh" "$@" ;;
+  seed|seed-workspace)     exec "$SCRIPTS/phoenix-seed-workspace.sh" "$@" ;;
+  widget-test|testwidget)  exec "$SCRIPTS/phoenix-widget-testpage.sh" "$@" ;;
   help|-h|--help|"")       usage ;;
   *)
     echo "Comando desconhecido: $cmd"

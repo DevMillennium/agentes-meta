@@ -1,0 +1,50 @@
+<% content_for :title, "Páginas Business — #{@installation_name}" %>
+
+<div class="phoenix-page phoenix-page--wide">
+  <h1 class="phoenix-page__title">Minhas páginas Business</h1>
+  <p class="phoenix-page__desc">
+    Cada <strong>Página Facebook</strong> que você administra pode ter uma <strong>caixa de entrada</strong> no omnichannel.
+    Use esta tela para <strong>alternar</strong> entre contas ou <strong>conectar</strong> uma página nova.
+  </p>
+
+  <% if @requires_login %>
+    <div class="phoenix-alert">
+      <p>Faça login para ver suas caixas ligadas.</p>
+      <a href="/app/login?return_to=/comecar/paginas-business" class="phoenix-btn phoenix-btn--primary">Conectar-se</a>
+    </div>
+  <% elsif @fb_inboxes.empty? %>
+    <div class="phoenix-alert">
+      <p>Nenhuma página Business conectada ainda.</p>
+      <a href="/comecar/continuar/facebook" class="phoenix-btn phoenix-btn--primary">Conectar primeira página (Messenger)</a>
+    </div>
+  <% else %>
+    <div class="phoenix-business-list">
+      <% @fb_inboxes.each do |row| %>
+        <article class="phoenix-business-card">
+          <div class="phoenix-business-card__body">
+            <h2 class="phoenix-business-card__title"><%= row[:inbox_name] %></h2>
+            <p class="phoenix-business-card__meta">
+              Página ID: <code><%= row[:page_id] %></code>
+              <% if row[:instagram_id].present? %>
+                · Instagram: <code><%= row[:instagram_id] %></code>
+              <% end %>
+            </p>
+          </div>
+          <div class="phoenix-business-card__actions">
+            <a href="<%= row[:conversations_url] %>" class="phoenix-btn phoenix-btn--primary phoenix-btn--sm">Abrir caixa</a>
+            <a href="<%= row[:settings_url] %>" class="phoenix-btn phoenix-btn--outline phoenix-btn--sm">Configurar</a>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="phoenix-business-footer">
+    <a href="/comecar/continuar/facebook" class="phoenix-btn phoenix-btn--primary">＋ Conectar outra página Business</a>
+    <a href="/app/accounts/<%= @account_id %>/settings/inboxes/list" class="phoenix-btn phoenix-btn--outline">Todas as caixas (painel)</a>
+  </div>
+
+  <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem;">
+    <a href="/comecar/canais">Outros canais</a> · <a href="/app">Painel</a>
+  </p>
+</div>

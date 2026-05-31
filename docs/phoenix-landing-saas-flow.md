@@ -57,6 +57,7 @@ Rotas novas (exemplo):
 root to: 'phoenix/welcome#home'
 get '/comecar', to: 'phoenix/welcome#start'
 get '/comecar/canais', to: 'phoenix/welcome#channels'
+get '/comecar/paginas-business', to: 'phoenix/welcome#business_pages'
 # /app e /app/* permanecem dashboard#index
 ```
 
@@ -102,6 +103,16 @@ Cada **Continuar**:
 ### 4. OAuth “direto” da landing
 
 Na home, ícones podem linkar para `/comecar/canais?canal=instagram` (mesmo fluxo). **Não** duplicar OAuth na landing — sempre delegar ao Chatwoot após auth.
+
+### 5. Administrador — várias páginas Business (sem fork Vue)
+
+| Ação | URL / comando |
+|------|----------------|
+| Alternar caixas já ligadas | `/comecar/paginas-business` ou `./phoenix paginas` |
+| Conectar outra página | `/comecar/continuar/facebook` → OAuth → dropdown ★/＋ |
+| Wizard Messenger no painel | `/app/.../inboxes/new/facebook` + hint `phoenix-facebook-inbox.js` |
+
+Backend: `config/initializers/phoenix_facebook_pages.rb` força `exists: false` no JSON (lista não fica vazia) e `register_facebook_page` reautoriza sem duplicar. **Não** altera `Facebook.vue` no bundle.
 
 ---
 
@@ -168,11 +179,23 @@ Reutilizar `phoenix-omnichannel.css` + variáveis `:root` já definidas.
 
 ---
 
+## P2 — Integrações (estilo Chatrace)
+
+- `GET /comecar/integracoes` — OpenAI, Make, Zapier, Dialogflow, Meta, webhooks
+- Matriz completa: [phoenix-chatrace-parity.md](./phoenix-chatrace-parity.md)
+
+## P1 — Widget + WhatsApp + Instagram
+
+- `GET /comecar/widget` — snippet embed
+- `./phoenix p1` — gera snippet + sync `INSTAGRAM_APP_ID`
+
 ## Comandos úteis (após Fase 1)
 
 ```bash
 ./phoenix open                    # /app
-open http://localhost:3001/       # landing (futuro)
+./phoenix home                    # landing /
+./phoenix paginas                 # alternar páginas Business
 open http://localhost:3001/comecar/canais
 ./phoenix connect instagram
+./scripts/phoenix-verify-omnichannel.sh
 ```

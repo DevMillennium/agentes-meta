@@ -41,7 +41,7 @@ docker compose -f docker-compose.chatwoot.yml exec -T chatwoot-rails bundle exec
   real = Inbox.find_by(channel_type: 'Channel::FacebookPage')
   real&.update!(name: 'Phoenix Omnichannel — Messenger & Instagram')
 
-  # Remover placeholders API (stack antiga / simulados)
+  # Remover apenas placeholders Channel::Api (não toca FacebookPage / Meta real)
   Inbox.where(channel_type: 'Channel::Api').find_each do |inbox|
     inbox.conversations.find_each(&:destroy!)
     inbox.destroy!
